@@ -1,0 +1,479 @@
+"use client"
+
+import type React from "react"
+import { useState, useEffect } from "react"
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native"
+import { LinearGradient } from "expo-linear-gradient"
+import { Ionicons } from "@expo/vector-icons"
+import { useForm, Controller } from "react-hook-form"
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withSequence,
+} from "react-native-reanimated"
+import { useNavigation } from "@react-navigation/native"
+import { useAuth } from "../context/AuthContext"
+import * as Haptics from "expo-haptics"
+
+interface FormData {
+  email: string
+  password: string
+  name?: string
+  confirmPassword?: string
+}
+
+const AuthScreen: React.FC = () => {
+  const navigation = useNavigation()
+  const { login, register, userType } = useAuth()
+  const [isLogin, setIsLogin] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+
+  const formOpacity = useSharedValue(0)
+  const buttonScale = useSharedValue(1)
+  const headerY = useSharedValue(-50)
+  const inputsY = useSharedValue(30)
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>()
+
+  // Animation d'entrée
+  useEffect(() => {
+    headerY.value = withTiming(0, { duration: 800 })
+    formOpacity.value = withTiming(1, { duration: 1000 })
+    inputsY.value = withTiming(0, { duration: 800 })
+  }, [])
+
+  const toggleAuthMode = () => {
+    setIsLogin(!isLogin)
+    reset()
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+
+    // Animation de transition
+    formOpacity.value = withSequence(withTiming(0.3, { duration: 200 }), withTiming(1, { duration: 400 }))
+  }
+
+  const handleForgotPassword = () => {
+    setShowForgotPassword(true)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+
+    setTimeout(() => {
+      Alert.alert(
+        "Mot de passe oublié",
+        "Un email de réinitialisation sera envoyé à votre adresse (fonctionnalité simulée)",
+        [{ text: "OK", onPress: () => setShowForgotPassword(false) }],
+      )
+    }, 500)
+  }
+
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: headerY.value }],
+  }))
+
+  const formAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: formOpacity.value,
+  }))
+
+  const inputsAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: inputsY.value }],
+  }))
+
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }))
+
+  return (
+    <LinearGradient colors={["#182825", "#0f1f1c", "#182825"]} style={styles.container}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          {/* Header */}
+          <Animated.View style={[styles.header, headerAnimatedStyle]}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <View style={styles.titleContainer}>
+              <LinearGradient colors={["#00E0B8", "#00c4a0"]} style={styles.titleGradient}>
+                <Text style={styles.title}>{isLogin ? "Connexion" : "Inscription"}</Text>
+              </LinearGradient>
+
+              <View style={styles.userTypeBadge}>
+                <Ionicons name={userType === "hearing" ? "ear" : "hand-left"} size={16} color="#00E0B8" />
+                <Text style={styles.userTypeText}>
+                  {userType === "hearing" ? "Personne entendante" : "Personne sourde"}
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+
+          {/* Form */}
+          <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
+            <Animated.View style={inputsAnimatedStyle}>
+              {!isLogin && (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Nom complet</Text>
+                  <Controller
+                    control={control}
+                    name="name"
+                    rules={{ required: "Le nom est requis" }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <View style={[styles.inputWrapper, errors.name && styles.inputError]}>
+                        <Ionicons name="person-outline" size={20} color="#999" style={styles.inputIcon} />
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Votre nom complet"
+                          placeholderTextColor="#999"
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value}
+                        />
+                      </View>
+                    )}
+                  />
+                  {errors.name && <Text style={styles.errorText}>{errors.name.message}</Text>}
+                </View>
+              )}
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Adresse email</Text>
+                <Controller
+                  control={control}
+                  name="email"
+                  rules={{
+                    required: "L'email est requis",
+                    pattern: {
+                      value: /^\S+@\S+$/i,
+                      message: "Email invalide",
+                    },
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={[styles.inputWrapper, errors.email && styles.inputError]}>
+                      <Ionicons name="mail-outline" size={20} color="#999" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="votre@email.com"
+                        placeholderTextColor="#999"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                      />
+                    </View>
+                  )}
+                />
+                {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Mot de passe</Text>
+                <Controller
+                  control={control}
+                  name="password"
+                  rules={{
+                    required: "Le mot de passe est requis",
+                    minLength: {
+                      value: 6,
+                      message: "Minimum 6 caractères",
+                    },
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={[styles.inputWrapper, errors.password && styles.inputError]}>
+                      <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="••••••••"
+                        placeholderTextColor="#999"
+                        secureTextEntry={!showPassword}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                      />
+                      <TouchableOpacity style={styles.eyeButton} onPress={() => setShowPassword(!showPassword)}>
+                        <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#999" />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                />
+                {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
+              </View>
+
+              {!isLogin && (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Confirmer le mot de passe</Text>
+                  <Controller
+                    control={control}
+                    name="confirmPassword"
+                    rules={{ required: "Confirmez le mot de passe" }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <View style={[styles.inputWrapper, errors.confirmPassword && styles.inputError]}>
+                        <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.inputIcon} />
+                        <TextInput
+                          style={styles.input}
+                          placeholder="••••••••"
+                          placeholderTextColor="#999"
+                          secureTextEntry={true}
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value}
+                        />
+                      </View>
+                    )}
+                  />
+                  {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
+                </View>
+              )}
+            </Animated.View>
+
+            {/* Submit Button */}
+            <Animated.View style={buttonAnimatedStyle}>
+              <TouchableOpacity
+                style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+                onPress={handleSubmit(async (data: FormData) => {
+                  if (!userType) return
+
+                  setIsLoading(true)
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+
+                  formOpacity.value = withTiming(0.7)
+                  buttonScale.value = withSpring(0.95)
+
+                  try {
+                    let success = false
+
+                    if (isLogin) {
+                      success = await login(data.email, data.password, userType)
+                    } else {
+                      if (data.password !== data.confirmPassword) {
+                        Alert.alert("Erreur", "Les mots de passe ne correspondent pas")
+                        return
+                      }
+                      success = await register(data.email, data.password, data.name || "", userType)
+                    }
+
+                    if (success) {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                      navigation.navigate("Main" as never)
+                    } else {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+                      Alert.alert("Erreur", "Identifiants incorrects")
+                    }
+                  } catch (error) {
+                    Alert.alert("Erreur", "Une erreur est survenue")
+                  } finally {
+                    setIsLoading(false)
+                    formOpacity.value = withTiming(1)
+                    buttonScale.value = withSpring(1)
+                  }
+                })}
+                disabled={isLoading}
+              >
+                <LinearGradient
+                  colors={isLoading ? ["#999", "#666"] : ["#00E0B8", "#00c4a0"]}
+                  style={styles.buttonGradient}
+                >
+                  {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                      <Text style={styles.submitButtonText}>Chargement...</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <Ionicons name={isLogin ? "log-in-outline" : "person-add-outline"} size={20} color="#FFFFFF" />
+                      <Text style={styles.submitButtonText}>{isLogin ? "Se connecter" : "S'inscrire"}</Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Forgot Password */}
+            {isLogin && (
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={handleForgotPassword}
+                disabled={showForgotPassword}
+              >
+                <Text style={[styles.forgotPasswordText, showForgotPassword && styles.forgotPasswordDisabled]}>
+                  {showForgotPassword ? "Envoi en cours..." : "Mot de passe oublié ?"}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Switch Mode */}
+            <TouchableOpacity style={styles.switchMode} onPress={toggleAuthMode}>
+              <Text style={styles.switchModeText}>
+                {isLogin ? "Pas encore de compte ? " : "Déjà un compte ? "}
+                <Text style={styles.switchModeLink}>{isLogin ? "S'inscrire" : "Se connecter"}</Text>
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
+  )
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 40,
+  },
+  header: {
+    marginBottom: 30,
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    padding: 10,
+    marginBottom: 20,
+  },
+  titleContainer: {
+    alignItems: "center",
+  },
+  titleGradient: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 28,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  userTypeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 224, 184, 0.1)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(0, 224, 184, 0.3)",
+  },
+  userTypeText: {
+    fontSize: 14,
+    color: "#00E0B8",
+    marginLeft: 8,
+    fontWeight: "500",
+  },
+  formContainer: {
+    flex: 1,
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 16,
+  },
+  inputError: {
+    borderColor: "#FF6B6B",
+    backgroundColor: "rgba(255, 107, 107, 0.1)",
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
+    padding: 16,
+    fontSize: 16,
+    color: "#FFFFFF",
+  },
+  eyeButton: {
+    padding: 8,
+  },
+  errorText: {
+    color: "#FF6B6B",
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4,
+  },
+  submitButton: {
+    borderRadius: 16,
+    overflow: "hidden",
+    marginTop: 32,
+    marginBottom: 24,
+  },
+  submitButtonDisabled: {
+    opacity: 0.7,
+  },
+  buttonGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 18,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  submitButtonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginLeft: 8,
+  },
+  forgotPassword: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  forgotPasswordText: {
+    color: "#00E0B8",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  forgotPasswordDisabled: {
+    opacity: 0.5,
+  },
+  switchMode: {
+    alignItems: "center",
+    paddingBottom: 40,
+  },
+  switchModeText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  switchModeLink: {
+    color: "#00E0B8",
+    fontWeight: "600",
+  },
+})
+
+export default AuthScreen
