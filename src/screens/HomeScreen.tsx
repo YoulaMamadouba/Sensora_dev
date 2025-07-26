@@ -169,22 +169,13 @@ const HomeScreen: React.FC = () => {
     },
   ]
 
-  const quotes = [
-    "La communication n'a pas de limites",
-    "Connecter les mondes à travers la technologie",
-    "L'innovation au service de l'accessibilité",
-    "Ensemble, brisons les barrières",
-  ]
-
-  const todayQuote = quotes[new Date().getDate() % quotes.length]
-
   return (
     <View style={styles.container}>
       <LinearGradient colors={["#FFFFFF", "#FFFFFF", "#FFFFFF"]} style={styles.container}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header avec logo et icônes premium */}
         <Animated.View style={[styles.header, headerAnimatedStyle]}>
-          {/* Logo Sensora à gauche */}
+          {/* Logo Sensora à gauche - PUSHÉ À GAUCHE */}
           <View style={styles.logoContainer}>
             <Image source={require("../../assets/logo.png")} style={styles.logo} resizeMode="contain" />
           </View>
@@ -226,7 +217,7 @@ const HomeScreen: React.FC = () => {
           <Animated.View style={[styles.quoteContainer, quoteAnimatedStyle]}>
             <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.quoteGradient}>
               <Ionicons name="chatbubble" size={16} color="#146454" />
-              <Text style={styles.quote}>"{todayQuote}"</Text>
+              <Text style={styles.quote}>"Donnez une voix au silence et ouvrez les portes de la communication"</Text>
             </LinearGradient>
           </Animated.View>
         </Animated.View>
@@ -244,13 +235,13 @@ const HomeScreen: React.FC = () => {
                   activeOpacity={0.8}
                 >
                   <View style={styles.moduleContent}>
-                  <View style={styles.moduleIconContainer}>
-                    <Ionicons name={module.icon as any} size={28} color={module.color} />
-                  </View>
-                  
-                  <Text style={styles.moduleTitle}>{module.title}</Text>
-                  
-                  <Text style={styles.moduleDescription} numberOfLines={4}>{module.description}</Text>
+                    <View style={styles.moduleIconContainer}>
+                      <Ionicons name={module.icon as any} size={28} color={module.color} />
+                    </View>
+                    
+                    <Text style={styles.moduleTitle}>{module.title}</Text>
+                    
+                    <Text style={styles.moduleDescription} numberOfLines={4}>{module.description}</Text>
                   </View>
                 </TouchableOpacity>
               </Animated.View>
@@ -352,10 +343,12 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     flex: 0,
+    paddingLeft: -20, // PUSHÉ À GAUCHE
   },
+  // LOGO DIMENSIONS EXACTES COMME CARROUSEL
   logo: {
-    width: 90,
-    height: 30,
+    width: 320, // Même dimension que carouselLogo
+    height: 190, // Même dimension que carouselLogo
   },
   headerIcons: {
     flexDirection: "row",
@@ -464,6 +457,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
     marginLeft: 8,
+    lineHeight: 20,
   },
   modulesContainer: {
     paddingHorizontal: 20,

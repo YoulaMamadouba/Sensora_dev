@@ -364,22 +364,22 @@ const ProfessionalScreen: React.FC = () => {
         style={styles.scrollView}
       >
         <Animated.View style={contentAnimatedStyle}>
-          {/* État de la réunion */}
-          <View style={styles.meetingStatusContainer}>
+        {/* État de la réunion */}
+        <View style={styles.meetingStatusContainer}>
             <Animated.View style={[styles.meetingGlow, glowAnimatedStyle]} />
             <Animated.View style={[styles.meetingCard, meetingAnimatedStyle]}>
               <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.meetingGradient}>
                 <View style={styles.meetingHeader}>
                   <View style={styles.meetingIcon}>
                     <LinearGradient colors={["#146454", "#029ED6"]} style={styles.meetingIconGradient}>
-                      <Ionicons 
-                        name={isInMeeting ? "videocam" : "videocam-off"} 
+              <Ionicons
+                name={isInMeeting ? "videocam" : "videocam-off"}
                         size={24} 
                         color="#FFFFFF" 
-                      />
+              />
                     </LinearGradient>
                   </View>
-                  <View style={styles.meetingInfo}>
+            <View style={styles.meetingInfo}>
                     <Text style={styles.meetingTitle}>
                       {isInMeeting ? "Réunion en cours" : "Prêt pour la réunion"}
                     </Text>
@@ -391,73 +391,73 @@ const ProfessionalScreen: React.FC = () => {
                         Durée: {formatTime(meetingDuration)}
                       </Text>
                     )}
-                  </View>
-                  <TouchableOpacity style={styles.meetingToggle} onPress={handleMeetingToggle}>
-                    <LinearGradient
+            </View>
+            <TouchableOpacity style={styles.meetingToggle} onPress={handleMeetingToggle}>
+              <LinearGradient
                       colors={isInMeeting ? ["#FF4757", "#FF3742"] : ["#146454", "#029ED6"]}
-                      style={styles.toggleGradient}
-                    >
-                      <Ionicons name={isInMeeting ? "stop" : "play"} size={20} color="#FFFFFF" />
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
+                style={styles.toggleGradient}
+              >
+                <Ionicons name={isInMeeting ? "stop" : "play"} size={20} color="#FFFFFF" />
               </LinearGradient>
+            </TouchableOpacity>
+                </View>
+          </LinearGradient>
             </Animated.View>
-          </View>
+        </View>
 
-          {/* Participants */}
-          {isInMeeting && (
-            <View style={styles.participantsContainer}>
+        {/* Participants */}
+        {isInMeeting && (
+          <View style={styles.participantsContainer}>
               <Text style={styles.sectionTitle}>Participants ({participants.length})</Text>
               <View style={styles.participantsGrid}>
-                {participants.map((participant) => (
-                  <View key={participant.id} style={styles.participantCard}>
-                    <LinearGradient
-                      colors={
-                        participant.speaking
+              {participants.map((participant) => (
+                <View key={participant.id} style={styles.participantCard}>
+                  <LinearGradient
+                    colors={
+                      participant.speaking
                           ? ["rgba(20, 100, 84, 0.15)", "rgba(2, 158, 214, 0.1)"]
                           : ["rgba(20, 100, 84, 0.08)", "rgba(2, 158, 214, 0.04)"]
-                      }
-                      style={styles.participantGradient}
-                    >
+                    }
+                    style={styles.participantGradient}
+                  >
                       <View style={[styles.participantAvatar, participant.speaking && styles.participantAvatarSpeaking]}>
                         <Text style={styles.participantInitial}>{participant.avatar}</Text>
                         {participant.speaking && (
                           <Animated.View style={[styles.speakingIndicator, glowAnimatedStyle]} />
                         )}
-                      </View>
-                      <View style={styles.participantInfo}>
-                        <Text style={styles.participantName}>{participant.name}</Text>
+                    </View>
+                    <View style={styles.participantInfo}>
+                      <Text style={styles.participantName}>{participant.name}</Text>
                         <Text style={styles.participantRole}>{participant.role}</Text>
                         <View style={styles.speakingStatus}>
-                          <View
-                            style={[
-                              styles.speakingDot,
+                        <View
+                          style={[
+                            styles.speakingDot,
                               { backgroundColor: participant.speaking ? "#146454" : "#999" },
-                            ]}
-                          />
-                          <Text style={styles.speakingText}>
-                            {participant.speaking ? "En train de parler" : "Silencieux"}
-                          </Text>
-                        </View>
+                          ]}
+                        />
+                        <Text style={styles.speakingText}>
+                          {participant.speaking ? "En train de parler" : "Silencieux"}
+                        </Text>
                       </View>
-                    </LinearGradient>
-                  </View>
-                ))}
-              </View>
+                    </View>
+                  </LinearGradient>
+                </View>
+              ))}
             </View>
-          )}
+          </View>
+        )}
 
-          {/* Transcription en temps réel */}
+        {/* Transcription en temps réel */}
           {isInMeeting && (
-            <View style={styles.transcriptionContainer}>
-              <Text style={styles.sectionTitle}>Transcription en temps réel</Text>
+        <View style={styles.transcriptionContainer}>
+          <Text style={styles.sectionTitle}>Transcription en temps réel</Text>
               <LinearGradient colors={["rgba(20, 100, 84, 0.08)", "rgba(2, 158, 214, 0.04)"]} style={styles.transcriptionBox}>
-                <Text style={styles.transcriptionText}>
+              <Text style={styles.transcriptionText}>
                   {transcription || "La transcription apparaîtra ici pendant la réunion..."}
-                </Text>
-                
-                <View style={styles.transcriptionControls}>
+              </Text>
+
+              <View style={styles.transcriptionControls}>
                   <TouchableOpacity style={styles.transcriptionButton} onPress={handleRecordingToggle}>
                     <LinearGradient colors={["#146454", "#029ED6"]} style={styles.transcriptionButtonGradient}>
                       <Ionicons name={isRecording ? "stop" : "mic"} size={16} color="#FFFFFF" />
@@ -467,19 +467,19 @@ const ProfessionalScreen: React.FC = () => {
                     </LinearGradient>
                   </TouchableOpacity>
                   
-                  <TouchableOpacity style={styles.transcriptionButton}>
+                <TouchableOpacity style={styles.transcriptionButton}>
                     <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.transcriptionButtonGradient}>
                       <Ionicons name="download" size={16} color="#146454" />
                       <Text style={[styles.transcriptionButtonText, { color: "#146454" }]}>Sauvegarder</Text>
                     </LinearGradient>
-                  </TouchableOpacity>
+                </TouchableOpacity>
                   
-                  <TouchableOpacity style={styles.transcriptionButton}>
+                <TouchableOpacity style={styles.transcriptionButton}>
                     <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.transcriptionButtonGradient}>
                       <Ionicons name="share" size={16} color="#146454" />
                       <Text style={[styles.transcriptionButtonText, { color: "#146454" }]}>Partager</Text>
                     </LinearGradient>
-                  </TouchableOpacity>
+                </TouchableOpacity>
                 </View>
 
                 {isRecording && (
@@ -489,10 +489,10 @@ const ProfessionalScreen: React.FC = () => {
                     <View style={styles.progressBar}>
                       <Animated.View style={[styles.progressFill, progressAnimatedStyle]} />
                     </View>
-                  </View>
-                )}
-              </LinearGradient>
-            </View>
+              </View>
+            )}
+          </LinearGradient>
+        </View>
           )}
 
           {/* Réunions à venir */}
@@ -515,23 +515,23 @@ const ProfessionalScreen: React.FC = () => {
                         <Text style={styles.meetingCardDetails}>
                           {meeting.participants} participants • {meeting.duration}
                         </Text>
-                      </View>
+            </View>
                       <View style={[styles.meetingStatus, { backgroundColor: meeting.status === "ongoing" ? "#146454" : "#029ED6" }]}>
                         <Text style={styles.meetingStatusText}>
                           {meeting.status === "ongoing" ? "En cours" : "À venir"}
-                        </Text>
+              </Text>
                       </View>
                     </View>
                   </LinearGradient>
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
+        </View>
 
-          {/* Outils professionnels */}
-          <View style={styles.toolsContainer}>
-            <Text style={styles.sectionTitle}>Outils Professionnels</Text>
-            <View style={styles.toolsGrid}>
+        {/* Outils professionnels */}
+        <View style={styles.toolsContainer}>
+          <Text style={styles.sectionTitle}>Outils Professionnels</Text>
+          <View style={styles.toolsGrid}>
               {tools.map((tool) => (
                 <TouchableOpacity key={tool.id} style={styles.toolCard} activeOpacity={0.8}>
                   <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.toolGradient}>
@@ -562,10 +562,10 @@ const ProfessionalScreen: React.FC = () => {
                   style={[styles.achievementCard, achievement.unlocked && styles.achievementUnlocked]}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient 
+              <LinearGradient
                     colors={achievement.unlocked ? ["rgba(20, 100, 84, 0.15)", "rgba(2, 158, 214, 0.1)"] : ["rgba(20, 100, 84, 0.08)", "rgba(2, 158, 214, 0.04)"]} 
                     style={styles.achievementGradient}
-                  >
+              >
                     <View style={[styles.achievementIcon, achievement.unlocked && styles.achievementIconUnlocked]}>
                       <Ionicons 
                         name={achievement.icon as any} 
@@ -585,8 +585,8 @@ const ProfessionalScreen: React.FC = () => {
                         <Text style={styles.achievementProgressText}>{achievement.progress}%</Text>
                       </View>
                     )}
-                  </LinearGradient>
-                </TouchableOpacity>
+              </LinearGradient>
+            </TouchableOpacity>
               ))}
             </View>
           </View>

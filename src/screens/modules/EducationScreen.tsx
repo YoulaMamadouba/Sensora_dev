@@ -325,9 +325,9 @@ const EducationScreen: React.FC = () => {
                     <View style={[styles.experienceFill, { width: `${(experience / 2000) * 100}%` }]} />
                   </View>
                 </View>
-              </LinearGradient>
-            </Animated.View>
-          </View>
+            </LinearGradient>
+          </Animated.View>
+        </View>
 
           {/* Catégories */}
           <View style={styles.categoriesContainer}>
@@ -340,10 +340,10 @@ const EducationScreen: React.FC = () => {
                   onPress={() => handleCategoryPress(category.id)}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient 
+          <LinearGradient
                     colors={selectedCategory === category.id ? ["#146454", "#029ED6"] : ["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} 
                     style={styles.categoryGradient}
-                  >
+          >
                     <Ionicons 
                       name={category.icon as any} 
                       size={24} 
@@ -352,8 +352,8 @@ const EducationScreen: React.FC = () => {
                     <Text style={[styles.categoryText, selectedCategory === category.id && styles.categoryTextSelected]}>
                       {category.name}
                     </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+            </LinearGradient>
+          </TouchableOpacity>
               ))}
             </View>
           </View>
@@ -377,9 +377,9 @@ const EducationScreen: React.FC = () => {
                       <View style={styles.courseInfo}>
                         <Text style={styles.courseTitle}>{course.title}</Text>
                         <Text style={styles.courseDescription}>{course.description}</Text>
-                      </View>
-                    </View>
-                    
+        </View>
+        </View>
+
                     <View style={styles.courseDetails}>
                       <View style={styles.courseStats}>
                         <View style={styles.statItem}>
@@ -394,8 +394,8 @@ const EducationScreen: React.FC = () => {
                           <Ionicons name="trophy" size={12} color="#146454" />
                           <Text style={styles.statText}>{course.difficulty}</Text>
                         </View>
-                      </View>
-                      
+          </View>
+
                       <View style={styles.progressContainer}>
                         <Text style={styles.progressText}>{course.progress}%</Text>
                         <View style={styles.progressBar}>
@@ -403,7 +403,7 @@ const EducationScreen: React.FC = () => {
                         </View>
                       </View>
                     </View>
-                  </LinearGradient>
+            </LinearGradient>
                 </TouchableOpacity>
               ))}
             </View>
@@ -442,7 +442,7 @@ const EducationScreen: React.FC = () => {
                         <Text style={styles.achievementProgressText}>{achievement.progress}%</Text>
                       </View>
                     )}
-                  </LinearGradient>
+            </LinearGradient>
                 </TouchableOpacity>
               ))}
             </View>
@@ -471,7 +471,7 @@ const EducationScreen: React.FC = () => {
               </LinearGradient>
             </View>
           </View>
-        </Animated.View>
+          </Animated.View>
       </ScrollView>
     </View>
   )

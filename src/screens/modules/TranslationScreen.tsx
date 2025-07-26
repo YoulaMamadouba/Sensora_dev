@@ -392,37 +392,37 @@ const TranslationScreen: React.FC = () => {
                 </View>
               </View>
             </LinearGradient>
-          </View>
+        </View>
 
-          {/* Sélection de langue */}
-          <View style={styles.languageContainer}>
-            <Text style={styles.sectionTitle}>Choisir une langue</Text>
-            <View style={styles.languagesGrid}>
-              {guineaLanguages.map((language) => (
-                <TouchableOpacity
-                  key={language.id}
-                  style={[styles.languageCard, selectedLanguage?.id === language.id && styles.languageCardSelected]}
-                  onPress={() => handleLanguageSelect(language)}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={
-                      selectedLanguage?.id === language.id
+        {/* Sélection de langue */}
+        <View style={styles.languageContainer}>
+          <Text style={styles.sectionTitle}>Choisir une langue</Text>
+          <View style={styles.languagesGrid}>
+            {guineaLanguages.map((language) => (
+              <TouchableOpacity
+                key={language.id}
+                style={[styles.languageCard, selectedLanguage?.id === language.id && styles.languageCardSelected]}
+                onPress={() => handleLanguageSelect(language)}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={
+                    selectedLanguage?.id === language.id
                         ? ["rgba(20, 100, 84, 0.15)", "rgba(2, 158, 214, 0.1)"]
                         : ["rgba(20, 100, 84, 0.08)", "rgba(2, 158, 214, 0.04)"]
-                    }
-                    style={styles.languageGradient}
-                  >
+                  }
+                  style={styles.languageGradient}
+                >
                     <View style={styles.languageHeader}>
-                      <Text style={styles.languageFlag}>{language.flag}</Text>
+                  <Text style={styles.languageFlag}>{language.flag}</Text>
                       {selectedLanguage?.id === language.id && (
                         <Animated.View style={[styles.selectedIndicator, glowAnimatedStyle]}>
                           <Ionicons name="checkmark-circle" size={16} color="#146454" />
                         </Animated.View>
                       )}
                     </View>
-                    <Text style={styles.languageName}>{language.name}</Text>
-                    <Text style={styles.languageNative}>{language.nativeName}</Text>
+                  <Text style={styles.languageName}>{language.name}</Text>
+                  <Text style={styles.languageNative}>{language.nativeName}</Text>
                     <View style={styles.languageDetails}>
                       <Text style={styles.languageRegion}>{language.region}</Text>
                       <Text style={styles.languageSpeakers}>{language.speakers} locuteurs</Text>
@@ -430,15 +430,15 @@ const TranslationScreen: React.FC = () => {
                         <Text style={styles.difficultyText}>{language.difficulty}</Text>
                       </View>
                     </View>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ))}
-            </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
           </View>
+        </View>
 
-          {/* Zone de saisie */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.sectionTitle}>Texte à traduire</Text>
+        {/* Zone de saisie */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.sectionTitle}>Texte à traduire</Text>
             <LinearGradient colors={["rgba(20, 100, 84, 0.08)", "rgba(2, 158, 214, 0.04)"]} style={styles.inputBox}>
               <TextInput
                 style={styles.textInput}
@@ -449,7 +449,7 @@ const TranslationScreen: React.FC = () => {
                 onChangeText={setInputText}
                 editable={inputMode === "text"}
               />
-              
+
               <View style={styles.inputControls}>
                 <TouchableOpacity
                   style={[styles.inputButton, inputMode === "voice" && styles.inputButtonActive]}
@@ -457,12 +457,12 @@ const TranslationScreen: React.FC = () => {
                   disabled={inputMode === "voice"}
                 >
                   <Animated.View style={voiceAnimatedStyle}>
-                    <LinearGradient
+                  <LinearGradient
                       colors={inputMode === "voice" ? ["#FF4757", "#FF3742"] : ["#146454", "#029ED6"]}
-                      style={styles.inputButtonGradient}
-                    >
+                    style={styles.inputButtonGradient}
+                  >
                       <Ionicons name={inputMode === "voice" ? "stop" : "mic"} size={20} color="#FFFFFF" />
-                    </LinearGradient>
+                  </LinearGradient>
                   </Animated.View>
                 </TouchableOpacity>
 
@@ -473,27 +473,27 @@ const TranslationScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
             </LinearGradient>
-          </View>
+        </View>
 
-          {/* Bouton de traduction */}
-          <View style={styles.translateContainer}>
+        {/* Bouton de traduction */}
+        <View style={styles.translateContainer}>
             <Animated.View style={[translateAnimatedStyle, languageAnimatedStyle]}>
-              <TouchableOpacity
-                style={[
-                  styles.translateButton,
-                  (!inputText.trim() || !selectedLanguage) && styles.translateButtonDisabled,
-                ]}
-                onPress={handleTranslate}
-                disabled={isTranslating || !inputText.trim() || !selectedLanguage}
-              >
-                <LinearGradient
-                  colors={
+            <TouchableOpacity
+              style={[
+                styles.translateButton,
+                (!inputText.trim() || !selectedLanguage) && styles.translateButtonDisabled,
+              ]}
+              onPress={handleTranslate}
+              disabled={isTranslating || !inputText.trim() || !selectedLanguage}
+            >
+              <LinearGradient
+                colors={
                     isTranslating || !inputText.trim() || !selectedLanguage 
                       ? ["#999", "#666"] 
                       : ["#146454", "#029ED6"]
-                  }
-                  style={styles.translateButtonGradient}
-                >
+                }
+                style={styles.translateButtonGradient}
+              >
                   {isTranslating && (
                     <View style={styles.progressContainer}>
                       <View style={styles.progressBar}>
@@ -501,29 +501,29 @@ const TranslationScreen: React.FC = () => {
                       </View>
                     </View>
                   )}
-                  <Ionicons name={isTranslating ? "sync" : "language"} size={24} color="#FFFFFF" />
+                <Ionicons name={isTranslating ? "sync" : "language"} size={24} color="#FFFFFF" />
                   <Text style={styles.translateButtonText}>
                     {isTranslating ? "Traduction..." : "Traduire"}
                   </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
-          </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
 
-          {/* Résultat de traduction */}
-          {translatedText && (
-            <View style={styles.resultContainer}>
-              <Text style={styles.sectionTitle}>Traduction en {selectedLanguage?.name}</Text>
+        {/* Résultat de traduction */}
+        {translatedText && (
+          <View style={styles.resultContainer}>
+            <Text style={styles.sectionTitle}>Traduction en {selectedLanguage?.name}</Text>
               <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.resultBox}>
-                <Text style={styles.resultText}>{translatedText}</Text>
-                
-                <View style={styles.resultControls}>
-                  <TouchableOpacity style={styles.resultButton} onPress={handlePlayAudio} disabled={isPlaying}>
-                    <LinearGradient
+              <Text style={styles.resultText}>{translatedText}</Text>
+
+              <View style={styles.resultControls}>
+                <TouchableOpacity style={styles.resultButton} onPress={handlePlayAudio} disabled={isPlaying}>
+                  <LinearGradient
                       colors={isPlaying ? ["#999", "#666"] : ["#146454", "#029ED6"]}
-                      style={styles.resultButtonGradient}
-                    >
-                      <Ionicons name={isPlaying ? "volume-high" : "play"} size={20} color="#FFFFFF" />
+                    style={styles.resultButtonGradient}
+                  >
+                    <Ionicons name={isPlaying ? "volume-high" : "play"} size={20} color="#FFFFFF" />
                       <Text style={styles.resultButtonText}>
                         {isPlaying ? "Lecture..." : "Écouter"}
                       </Text>
@@ -534,19 +534,19 @@ const TranslationScreen: React.FC = () => {
                     <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.resultButtonGradient}>
                       <Ionicons name="copy" size={20} color="#146454" />
                       <Text style={[styles.resultButtonText, { color: "#146454" }]}>Copier</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
+                  </LinearGradient>
+                </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.resultButton}>
+                <TouchableOpacity style={styles.resultButton}>
                     <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.resultButtonGradient}>
                       <Ionicons name="share" size={20} color="#146454" />
                       <Text style={[styles.resultButtonText, { color: "#146454" }]}>Partager</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              </LinearGradient>
-            </View>
-          )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          </View>
+        )}
 
           {/* Historique des traductions */}
           {translationHistory.length > 0 && (
@@ -608,21 +608,21 @@ const TranslationScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Informations sur les langues */}
-          <View style={styles.infoContainer}>
-            <Text style={styles.sectionTitle}>À propos des langues guinéennes</Text>
+        {/* Informations sur les langues */}
+        <View style={styles.infoContainer}>
+          <Text style={styles.sectionTitle}>À propos des langues guinéennes</Text>
             <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.infoBox}>
               <View style={styles.infoIcon}>
                 <Ionicons name="information-circle" size={32} color="#146454" />
               </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoTitle}>Diversité linguistique</Text>
-                <Text style={styles.infoText}>
+            <View style={styles.infoContent}>
+              <Text style={styles.infoTitle}>Diversité linguistique</Text>
+              <Text style={styles.infoText}>
                   La Guinée compte plus de 40 langues locales. Les principales sont le Pular (40%), le Malinké (30%), le Soussou (20%) et d'autres langues forestières. Chaque langue reflète une culture et une histoire unique.
-                </Text>
-              </View>
-            </LinearGradient>
-          </View>
+              </Text>
+            </View>
+          </LinearGradient>
+        </View>
         </Animated.View>
       </ScrollView>
     </View>
