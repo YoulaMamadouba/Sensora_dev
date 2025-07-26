@@ -61,7 +61,7 @@ const SignToVoiceScreen: React.FC = () => {
   }))
 
   return (
-    <LinearGradient colors={["#182825", "#0f1f1c"]} style={styles.container}>
+    <LinearGradient colors={["#FFFFFF", "#F8F9FA"]} style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Signes → Texte / Voix</Text>
         <Text style={styles.subtitle}>Montrez vos signes pour les traduire</Text>
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    color: "#FFFFFF",
+    color: "#146454",
     fontWeight: "bold",
     marginBottom: 8,
   },
@@ -192,13 +192,13 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderWidth: 3,
-    borderColor: "#00E0B8",
+    borderColor: "#146454",
     borderRadius: 8,
     marginBottom: 12,
   },
   detectionText: {
     fontSize: 14,
-    color: "#00E0B8",
+    color: "#146454",
     fontWeight: "bold",
   },
   resultContainer: {
@@ -207,19 +207,26 @@ const styles = StyleSheet.create({
   },
   resultTitle: {
     fontSize: 18,
-    color: "#FFFFFF",
+    color: "#146454",
     fontWeight: "bold",
     marginBottom: 12,
   },
   textBox: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(20, 100, 84, 0.2)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   detectedTextStyle: {
     fontSize: 18,
-    color: "#FFFFFF",
+    color: "#146454",
     textAlign: "center",
   },
   playButton: {
@@ -264,7 +271,7 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     fontSize: 16,
-    color: "#FFFFFF",
+    color: "#146454",
     opacity: 0.8,
     textAlign: "center",
   },
@@ -273,13 +280,13 @@ const styles = StyleSheet.create({
   },
   tipsTitle: {
     fontSize: 16,
-    color: "#00E0B8",
+    color: "#146454",
     fontWeight: "bold",
     marginBottom: 8,
   },
   tipText: {
     fontSize: 14,
-    color: "#FFFFFF",
+    color: "#146454",
     opacity: 0.7,
     marginBottom: 4,
   },

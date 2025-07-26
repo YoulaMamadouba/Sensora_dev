@@ -188,8 +188,16 @@ const IntroScreen: React.FC = () => {
   if (showCarousel) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={["#182825", "#0f1f1c", "#182825"]} style={styles.container}>
+        <LinearGradient colors={["#FFFFFF", "#F3FAF8", "#E8F6F9"]} style={styles.container}>
           <View style={styles.carouselContainer}>
+            {/* Motifs décoratifs subtils et émotionnellement positifs */}
+            <View style={styles.backgroundPatterns}>
+              <View style={styles.wavePattern1} />
+              <View style={styles.wavePattern2} />
+              <View style={styles.communicationCircles} />
+              <View style={styles.inclusionDots} />
+            </View>
+            
             {/* Logo Sensora en haut */}
             <View style={styles.carouselLogoContainer}>
               <Image source={require("../../assets/logo.png")} style={styles.carouselLogo} resizeMode="contain" />
@@ -205,10 +213,10 @@ const IntroScreen: React.FC = () => {
                 />
                 
                 {/* Overlay avec gradient moderne */}
-                <LinearGradient
-                  colors={["transparent", "rgba(24, 40, 37, 0.3)", "rgba(24, 40, 37, 0.9)"]}
-                  style={styles.slideGradient}
-                />
+                                  <LinearGradient
+                    colors={["transparent", "rgba(255, 255, 255, 0.3)", "rgba(255, 255, 255, 0.9)"]}
+                    style={styles.slideGradient}
+                  />
                 
                 {/* Contenu du slide */}
                 <View style={styles.slideContent}>
@@ -241,37 +249,24 @@ const IntroScreen: React.FC = () => {
                 ))}
               </View>
 
-              {/* Contrôles de navigation innovants */}
+                            {/* Contrôles de navigation innovants */}
               <View style={styles.navigationContainer}>
-                {/* Flèches de navigation avec effet glassmorphism */}
-                <View style={styles.arrowContainer}>
-                  {currentSlide > 0 && (
-                    <TouchableOpacity style={styles.arrowButton} onPress={prevSlide} activeOpacity={0.8}>
-                      <LinearGradient
-                        colors={["rgba(255, 255, 255, 0.2)", "rgba(255, 255, 255, 0.1)"]}
-                        style={styles.arrowGradient}
-                      >
-                        <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  )}
-                  
-                  {currentSlide < features.length - 1 && (
-                    <TouchableOpacity style={styles.arrowButton} onPress={nextSlide} activeOpacity={0.8}>
-                      <LinearGradient
-                        colors={["rgba(255, 255, 255, 0.2)", "rgba(255, 255, 255, 0.1)"]}
-                        style={styles.arrowGradient}
-                      >
-                        <Ionicons name="chevron-forward" size={28} color="#FFFFFF" />
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  )}
-                </View>
+                {/* Flèche de retour uniquement */}
+                {currentSlide > 0 && (
+                  <TouchableOpacity style={styles.backArrowButton} onPress={prevSlide} activeOpacity={0.8} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                    <LinearGradient
+                      colors={["rgba(20, 100, 84, 0.2)", "rgba(20, 100, 84, 0.1)"]}
+                      style={styles.backArrowGradient}
+                    >
+                      <Ionicons name="chevron-back" size={24} color="#146454" />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                )}
 
                 {/* Bouton principal avec design futuriste */}
-                <TouchableOpacity style={styles.mainButton} onPress={nextSlide} activeOpacity={0.9}>
+                <TouchableOpacity style={styles.mainButton} onPress={nextSlide} activeOpacity={0.8} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
                   <LinearGradient
-                    colors={["#00E0B8", "#00c4a0", "#00a888"]}
+                    colors={["#146454", "#0F4A3A", "#0A3A2A"]}
                     style={styles.mainButtonGradient}
                   >
                     <View style={styles.buttonGlow} />
@@ -281,7 +276,7 @@ const IntroScreen: React.FC = () => {
                     <Ionicons 
                       name={currentSlide === features.length - 1 ? "rocket" : "arrow-forward"} 
                       size={24} 
-                      color="#FFFFFF" 
+                      color="#029ED6" 
                     />
                   </LinearGradient>
                 </TouchableOpacity>
@@ -298,7 +293,7 @@ const IntroScreen: React.FC = () => {
       {/* Background animé */}
       <Animated.View style={[StyleSheet.absoluteFill, backgroundAnimatedStyle]}>
         <LinearGradient
-          colors={["#182825", "#0a1512", "#182825", "#0f1f1c"]}
+          colors={["#FFFFFF", "#F3FAF8", "#E8F6F9", "#E0F4F7"]}
           style={StyleSheet.absoluteFill}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -329,7 +324,7 @@ const IntroScreen: React.FC = () => {
       <View style={styles.content}>
         {/* Glow Effect */}
         <Animated.View style={[styles.glowContainer, glowAnimatedStyle]}>
-          <LinearGradient colors={["#00E0B8", "rgba(0, 224, 184, 0.3)", "transparent"]} style={styles.glow} />
+          <LinearGradient colors={["#146454", "rgba(20, 100, 84, 0.3)", "transparent"]} style={styles.glow} />
         </Animated.View>
 
         {/* Logo Container */}
@@ -350,7 +345,7 @@ const IntroScreen: React.FC = () => {
         <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
           <TouchableOpacity style={styles.continueButton} onPress={navigateToNext} activeOpacity={0.8}>
             <LinearGradient
-              colors={["#00E0B8", "#00c4a0"]}
+              colors={["#146454", "#0F4A3A"]}
               style={styles.buttonGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -367,7 +362,7 @@ const IntroScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#182825",
+    backgroundColor: "#FFFFFF",
   },
   content: {
     flex: 1,
@@ -408,7 +403,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 4,
     height: 4,
-    backgroundColor: "#00E0B8",
+    backgroundColor: "#029ED6",
     borderRadius: 2,
     opacity: 0.6,
   },
@@ -420,7 +415,7 @@ const styles = StyleSheet.create({
   circle: {
     position: "absolute",
     borderWidth: 1,
-    borderColor: "rgba(0, 224, 184, 0.2)",
+    borderColor: "rgba(2, 158, 214, 0.2)",
     borderRadius: 1000,
   },
   circle1: {
@@ -473,33 +468,36 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 5,
-    paddingBottom: 80,
+    paddingTop: 0,
+    paddingBottom: 10,
   },
   carouselLogoContainer: {
-    marginBottom: 2,
+    marginBottom: 0,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 0,
   },
   carouselLogo: {
-    width: 300,
-    height: 180,
+    width: 320,
+    height: 190,
   },
   carousel: {
     width: "100%",
     maxWidth: 400,
+    justifyContent: "flex-start",
   },
   slideContainer: {
-    height: 350,
+    height: 280,
     borderRadius: 25,
     overflow: "hidden",
-    marginBottom: 15,
+    marginBottom: 10,
     elevation: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.12,
     shadowRadius: 20,
-    backgroundColor: "#1a2f2a",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "rgba(2, 158, 214, 0.08)",
   },
   slideGradient: {
     position: "absolute",
@@ -549,11 +547,11 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "rgba(0, 224, 184, 0.9)",
+    backgroundColor: "rgba(20, 100, 84, 0.9)",
     justifyContent: "center",
     alignItems: "center",
     elevation: 8,
-    shadowColor: "#00E0B8",
+    shadowColor: "#146454",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -561,14 +559,14 @@ const styles = StyleSheet.create({
   slideTitle: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: "#146454",
     textAlign: "center",
     marginBottom: 10,
     letterSpacing: 0.5,
   },
   slideDescription: {
     fontSize: 16,
-    color: "#FFFFFF",
+    color: "#146454",
     textAlign: "center",
     opacity: 0.9,
     lineHeight: 24,
@@ -646,6 +644,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  backArrowButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    overflow: "hidden",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    marginRight: 15,
+    zIndex: 10,
+  },
+  backArrowGradient: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   carouselControls: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -659,7 +676,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 30,
+    padding: 25,
     alignItems: "center",
     zIndex: 3,
   },
@@ -676,8 +693,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginVertical: 15,
+    marginVertical: 5,
     paddingHorizontal: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 15,
+    paddingVertical: 6,
   },
   progressItem: {
     alignItems: "center",
@@ -687,24 +707,27 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "rgba(20, 100, 84, 0.3)",
     marginBottom: 8,
   },
   progressBarActive: {
-    backgroundColor: "#00E0B8",
+    backgroundColor: "#146454",
     width: 60,
   },
   progressText: {
     fontSize: 12,
-    color: "rgba(255, 255, 255, 0.7)",
+    color: "rgba(20, 100, 84, 0.7)",
     fontWeight: "600",
   },
   navigationContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
-    marginTop: 10,
+    marginTop: 5,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 20,
+    paddingVertical: 10,
   },
   arrowContainer: {
     flexDirection: "row",
@@ -714,10 +737,12 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     overflow: "hidden",
     elevation: 15,
-    shadowColor: "#00E0B8",
+    shadowColor: "#146454",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 15,
+    minWidth: 200,
+    zIndex: 10,
   },
   mainButtonGradient: {
     flexDirection: "row",
@@ -741,6 +766,57 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginRight: 10,
     letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  // Motifs décoratifs subtils et émotionnellement positifs
+  backgroundPatterns: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    zIndex: 1,
+    pointerEvents: "none",
+  },
+  wavePattern1: {
+    position: "absolute",
+    top: "12%",
+    left: "5%",
+    width: 120,
+    height: 3,
+    backgroundColor: "rgba(20, 100, 84, 0.08)",
+    borderRadius: 1.5,
+    transform: [{ rotate: "15deg" }],
+    pointerEvents: "none",
+  },
+  wavePattern2: {
+    position: "absolute",
+    top: "18%",
+    right: "8%",
+    width: 80,
+    height: 2,
+    backgroundColor: "rgba(2, 158, 214, 0.06)",
+    borderRadius: 1,
+    transform: [{ rotate: "-10deg" }],
+    pointerEvents: "none",
+  },
+  communicationCircles: {
+    position: "absolute",
+    bottom: "25%",
+    left: "15%",
+    width: 8,
+    height: 8,
+    backgroundColor: "rgba(20, 100, 84, 0.1)",
+    borderRadius: 4,
+    pointerEvents: "none",
+  },
+  inclusionDots: {
+    position: "absolute",
+    bottom: "20%",
+    right: "15%",
+    width: 6,
+    height: 6,
+    backgroundColor: "rgba(2, 158, 214, 0.08)",
+    borderRadius: 3,
+    pointerEvents: "none",
   },
 })
 

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useEffect } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native"
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
 import Animated, {
@@ -30,6 +30,7 @@ const HomeScreen: React.FC = () => {
   const headerOpacity = useSharedValue(0)
   const statsOpacity = useSharedValue(0)
   const quoteOpacity = useSharedValue(0)
+  const notificationScale = useSharedValue(1)
 
   useEffect(() => {
     // Séquence d'animations d'entrée
@@ -51,15 +52,47 @@ const HomeScreen: React.FC = () => {
       -1,
       true,
     )
+
+    // Animation de notification
+    notificationScale.value = withRepeat(
+      withSequence(withTiming(1.1, { duration: 1000 }), withTiming(1, { duration: 1000 })),
+      -1,
+      true,
+    )
   }, [])
 
   const handleModulePress = (moduleName: string, screenName: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    navigation.navigate(screenName as never)
+    
+    // Navigation conditionnelle selon le module
+    switch (moduleName) {
+      case "voice-to-sign":
+        // Naviguer directement vers le module VoiceToSign
+        navigation.navigate("VoiceToSign" as never)
+        break
+      case "sign-to-voice":
+        // Naviguer directement vers le module SignToVoice
+        navigation.navigate("SignToVoice" as never)
+        break
+      case "health":
+        navigation.navigate("Health" as never)
+        break
+      case "education":
+        navigation.navigate("Education" as never)
+        break
+                  case "professional":
+              navigation.navigate("Professional" as never)
+              break
+      case "translation":
+        navigation.navigate("Translation" as never)
+        break
+      default:
+        navigation.navigate(screenName as never)
+    }
   }
 
   const avatarAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: avatarScale.value }, { translateY: floatingY.value }],
+    transform: [{ scale: avatarScale.value }, { translateY: floatingY.value }] as any,
   }))
 
   const headerAnimatedStyle = useAnimatedStyle(() => ({
@@ -81,29 +114,33 @@ const HomeScreen: React.FC = () => {
     opacity: quoteOpacity.value,
   }))
 
+  const notificationAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: notificationScale.value }],
+  }))
+
   const modules = [
     {
       id: "voice-to-sign",
       title: "Voix → Signes",
-      description: "Convertir la parole en langue des signes",
+      description: "Convertir la parole en langue des signes avec précision",
       icon: "mic",
-      color: "#00E0B8",
-      screen: "VoiceToSign",
+      color: "#146454", // Couleur primaire
+      screen: "Health",
     },
     {
       id: "sign-to-voice",
       title: "Signes → Voix",
-      description: "Traduire les signes en texte/voix",
+      description: "Traduire les signes en texte et voix claire",
       icon: "hand-left",
-      color: "#FF6B6B",
-      screen: "SignToVoice",
+      color: "#029ED6", // Couleur secondaire
+      screen: "Education",
     },
     {
       id: "health",
       title: "Santé Connectée",
       description: "Surveillance des paramètres vitaux",
       icon: "heart",
-      color: "#4ECDC4",
+      color: "#146454", // Couleur primaire
       screen: "Health",
     },
     {
@@ -111,7 +148,7 @@ const HomeScreen: React.FC = () => {
       title: "Éducation",
       description: "Modules d'apprentissage interactifs",
       icon: "school",
-      color: "#45B7D1",
+      color: "#029ED6", // Couleur secondaire
       screen: "Education",
     },
     {
@@ -119,16 +156,16 @@ const HomeScreen: React.FC = () => {
       title: "Insertion Pro",
       description: "Outils pour le monde professionnel",
       icon: "briefcase",
-      color: "#96CEB4",
-      screen: "Professional",
+      color: "#146454", // Couleur primaire
+      screen: "Health",
     },
     {
       id: "translation",
       title: "Langues Locales",
       description: "Traduction vers langues guinéennes",
       icon: "language",
-      color: "#FFEAA7",
-      screen: "Translation",
+      color: "#029ED6", // Couleur secondaire
+      screen: "Education",
     },
   ]
 
@@ -142,12 +179,37 @@ const HomeScreen: React.FC = () => {
   const todayQuote = quotes[new Date().getDate() % quotes.length]
 
   return (
-    <LinearGradient colors={["#182825", "#0f1f1c", "#182825"]} style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Header avec avatar flottant */}
+    <View style={styles.container}>
+      <LinearGradient colors={["#FFFFFF", "#FFFFFF", "#FFFFFF"]} style={styles.container}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* Header avec logo et icônes premium */}
         <Animated.View style={[styles.header, headerAnimatedStyle]}>
+          {/* Logo Sensora à gauche */}
+          <View style={styles.logoContainer}>
+            <Image source={require("../../assets/logo.png")} style={styles.logo} resizeMode="contain" />
+          </View>
+
+          {/* Icônes premium à droite */}
+          <View style={styles.headerIcons}>
+            <TouchableOpacity style={styles.iconButton}>
+              <Animated.View style={[styles.notificationContainer, notificationAnimatedStyle]}>
+                <Ionicons name="notifications" size={24} color="#146454" />
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationCount}>5</Text>
+                </View>
+              </Animated.View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.iconButton}>
+              <Ionicons name="settings" size={24} color="#146454" />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        {/* Avatar et informations utilisateur */}
+        <Animated.View style={[styles.userSection, headerAnimatedStyle]}>
           <Animated.View style={[styles.avatarContainer, avatarAnimatedStyle]}>
-            <LinearGradient colors={["#00E0B8", "#00c4a0"]} style={styles.avatar}>
+            <LinearGradient colors={["#146454", "#029ED6"]} style={styles.avatar}>
               <Text style={styles.avatarText}>{user?.name?.charAt(0).toUpperCase() || "U"}</Text>
             </LinearGradient>
             <View style={styles.avatarGlow} />
@@ -157,44 +219,41 @@ const HomeScreen: React.FC = () => {
           <Text style={styles.userName}>{user?.name || "Utilisateur"}</Text>
 
           <View style={styles.userTypeIndicator}>
-            <Ionicons name={userType === "hearing" ? "ear" : "hand-left"} size={16} color="#00E0B8" />
+            <Ionicons name={userType === "hearing" ? "ear" : "hand-left"} size={16} color="#146454" />
             <Text style={styles.userTypeText}>{userType === "hearing" ? "Mode Entendant" : "Mode Sourd"}</Text>
           </View>
 
           <Animated.View style={[styles.quoteContainer, quoteAnimatedStyle]}>
-            <LinearGradient colors={["rgba(0, 224, 184, 0.1)", "rgba(0, 224, 184, 0.05)"]} style={styles.quoteGradient}>
-              <Ionicons name="quote" size={16} color="#00E0B8" />
+            <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.quoteGradient}>
+              <Ionicons name="chatbubble" size={16} color="#146454" />
               <Text style={styles.quote}>"{todayQuote}"</Text>
             </LinearGradient>
           </Animated.View>
         </Animated.View>
 
-        {/* Modules Grid */}
+        {/* Modules Grid Ultra Premium */}
         <Animated.View style={[styles.modulesContainer, cardAnimatedStyle]}>
           <Text style={styles.sectionTitle}>Modules Sensora</Text>
 
           <View style={styles.modulesGrid}>
             {modules.map((module, index) => (
-              <TouchableOpacity
-                key={module.id}
-                style={styles.moduleCard}
-                onPress={() => handleModulePress(module.id, module.screen)}
-                activeOpacity={0.8}
-              >
-                <LinearGradient colors={[`${module.color}20`, `${module.color}10`]} style={styles.moduleGradient}>
+              <Animated.View key={module.id} style={[styles.moduleCard, cardAnimatedStyle]}>
+                <TouchableOpacity
+                  style={styles.moduleCard}
+                  onPress={() => handleModulePress(module.id, module.screen)}
+                  activeOpacity={0.8}
+                >
                   <View style={styles.moduleContent}>
-                    <View style={[styles.moduleIcon, { backgroundColor: module.color }]}>
-                      <Ionicons name={module.icon as any} size={28} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.moduleTitle}>{module.title}</Text>
-                    <Text style={styles.moduleDescription}>{module.description}</Text>
-
-                    <View style={styles.moduleArrow}>
-                      <Ionicons name="arrow-forward" size={16} color={module.color} />
-                    </View>
+                  <View style={styles.moduleIconContainer}>
+                    <Ionicons name={module.icon as any} size={28} color={module.color} />
                   </View>
-                </LinearGradient>
-              </TouchableOpacity>
+                  
+                  <Text style={styles.moduleTitle}>{module.title}</Text>
+                  
+                  <Text style={styles.moduleDescription} numberOfLines={4}>{module.description}</Text>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
             ))}
           </View>
         </Animated.View>
@@ -206,10 +265,10 @@ const HomeScreen: React.FC = () => {
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
               <LinearGradient
-                colors={["rgba(0, 224, 184, 0.1)", "rgba(0, 224, 184, 0.05)"]}
+                colors={["rgba(20, 100, 84, 0.1)", "rgba(20, 100, 84, 0.05)"]}
                 style={styles.statGradient}
               >
-                <Ionicons name="trending-up" size={24} color="#00E0B8" />
+                <Ionicons name="trending-up" size={24} color="#146454" />
                 <Text style={styles.statNumber}>12</Text>
                 <Text style={styles.statLabel}>Traductions</Text>
               </LinearGradient>
@@ -217,10 +276,10 @@ const HomeScreen: React.FC = () => {
 
             <View style={styles.statCard}>
               <LinearGradient
-                colors={["rgba(69, 183, 209, 0.1)", "rgba(69, 183, 209, 0.05)"]}
+                colors={["rgba(2, 158, 214, 0.1)", "rgba(2, 158, 214, 0.05)"]}
                 style={styles.statGradient}
               >
-                <Ionicons name="school" size={24} color="#45B7D1" />
+                <Ionicons name="school" size={24} color="#029ED6" />
                 <Text style={styles.statNumber}>8</Text>
                 <Text style={styles.statLabel}>Leçons</Text>
               </LinearGradient>
@@ -228,10 +287,10 @@ const HomeScreen: React.FC = () => {
 
             <View style={styles.statCard}>
               <LinearGradient
-                colors={["rgba(150, 206, 180, 0.1)", "rgba(150, 206, 180, 0.05)"]}
+                colors={["rgba(20, 100, 84, 0.1)", "rgba(20, 100, 84, 0.05)"]}
                 style={styles.statGradient}
               >
-                <Ionicons name="checkmark-circle" size={24} color="#96CEB4" />
+                <Ionicons name="checkmark-circle" size={24} color="#146454" />
                 <Text style={styles.statNumber}>95%</Text>
                 <Text style={styles.statLabel}>Précision</Text>
               </LinearGradient>
@@ -245,8 +304,8 @@ const HomeScreen: React.FC = () => {
 
           <View style={styles.quickActions}>
             <TouchableOpacity style={styles.quickAction} onPress={() => handleModulePress("emergency", "Health")}>
-              <LinearGradient colors={["#FF6B6B", "#FF5252"]} style={styles.quickActionGradient}>
-                <Ionicons name="warning" size={20} color="#FFFFFF" />
+              <LinearGradient colors={["#FF0000", "#FF0000"]} style={styles.quickActionGradient}>
+                <Ionicons name="warning" size={16} color="#FFFFFF" />
                 <Text style={styles.quickActionText}>Urgence</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -255,8 +314,8 @@ const HomeScreen: React.FC = () => {
               style={styles.quickAction}
               onPress={() => handleModulePress("quick-translate", "VoiceToSign")}
             >
-              <LinearGradient colors={["#00E0B8", "#00c4a0"]} style={styles.quickActionGradient}>
-                <Ionicons name="flash" size={20} color="#FFFFFF" />
+              <LinearGradient colors={["#146454", "#029ED6"]} style={styles.quickActionGradient}>
+                <Ionicons name="flash" size={16} color="#FFFFFF" />
                 <Text style={styles.quickActionText}>Traduction Rapide</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -264,18 +323,68 @@ const HomeScreen: React.FC = () => {
         </Animated.View>
       </ScrollView>
     </LinearGradient>
-  )
-}
+  </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 40,
+    paddingTop: 20,
     paddingBottom: 20,
   },
+  logoBackground: {
+    position: "absolute",
+    top: 40,
+    left: -80,
+    zIndex: -1,
+    opacity: 0.15,
+  },
   header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    marginTop: 20,
+  },
+  logoContainer: {
+    flex: 0,
+  },
+  logo: {
+    width: 90,
+    height: 30,
+  },
+  headerIcons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  iconButton: {
+    padding: 8,
+  },
+  notificationContainer: {
+    position: "relative",
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "#029ED6",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  notificationCount: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  userSection: {
     alignItems: "center",
     paddingHorizontal: 20,
     paddingBottom: 30,
@@ -297,7 +406,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#00E0B8",
+    backgroundColor: "#146454",
     opacity: 0.2,
     top: -5,
     left: -5,
@@ -310,20 +419,20 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 18,
-    color: "#FFFFFF",
+    color: "#146454",
     opacity: 0.8,
     marginBottom: 4,
   },
   userName: {
     fontSize: 28,
-    color: "#FFFFFF",
+    color: "#146454",
     fontWeight: "bold",
     marginBottom: 12,
   },
   userTypeIndicator: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0, 224, 184, 0.1)",
+    backgroundColor: "rgba(20, 100, 84, 0.1)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 15,
@@ -331,7 +440,7 @@ const styles = StyleSheet.create({
   },
   userTypeText: {
     fontSize: 12,
-    color: "#00E0B8",
+    color: "#146454",
     marginLeft: 6,
     fontWeight: "600",
   },
@@ -346,11 +455,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderWidth: 1,
-    borderColor: "rgba(0, 224, 184, 0.3)",
+    borderColor: "rgba(20, 100, 84, 0.3)",
   },
   quote: {
     fontSize: 14,
-    color: "#FFFFFF",
+    color: "#146454",
     fontStyle: "italic",
     textAlign: "center",
     flex: 1,
@@ -362,7 +471,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 22,
-    color: "#FFFFFF",
+    color: "#146454",
     fontWeight: "bold",
     marginBottom: 20,
   },
@@ -373,43 +482,86 @@ const styles = StyleSheet.create({
   },
   moduleCard: {
     width: (width - 60) / 2,
-    height: 160,
+    height: 200,
     marginBottom: 16,
-    borderRadius: 20,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#029ED6",
+    shadowColor: "#146454",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 6,
     overflow: "hidden",
   },
   moduleGradient: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "rgba(20, 100, 84, 0.1)",
   },
   moduleContent: {
     flex: 1,
     padding: 16,
     justifyContent: "space-between",
+    alignItems: "center",
+    height: "100%",
+    minHeight: 200,
+  },
+  moduleIconContainer: {
+    marginBottom: 12,
+  },
+  moduleSpacer: {
+    height: 8,
+  },
+  moduleTopSection: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  moduleTextSection: {
+    flex: 1,
+    marginLeft: 12,
   },
   moduleIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
-    alignSelf: "flex-start",
   },
   moduleTitle: {
-    fontSize: 16,
-    color: "#FFFFFF",
+    fontSize: 18,
+    color: "#146454",
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: 10,
+    textAlign: "center",
   },
   moduleDescription: {
-    fontSize: 12,
-    color: "#FFFFFF",
-    opacity: 0.8,
-    lineHeight: 16,
+    fontSize: 15,
+    color: "#146454",
+    opacity: 0.9,
+    lineHeight: 20,
+    textAlign: "center",
+    fontWeight: "500",
+    marginBottom: 8,
+    flex: 1,
+    paddingHorizontal: 4,
   },
-  moduleArrow: {
-    alignSelf: "flex-end",
+  moduleIndicator: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 12,
+  },
+  indicatorDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   statsContainer: {
     paddingHorizontal: 20,
@@ -421,25 +573,33 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    marginHorizontal: 4,
-    borderRadius: 16,
+    marginHorizontal: 6,
+    borderRadius: 20,
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
   },
   statGradient: {
     alignItems: "center",
-    padding: 16,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "rgba(20, 100, 84, 0.1)",
   },
   statNumber: {
     fontSize: 24,
-    color: "#FFFFFF",
+    color: "#146454",
     fontWeight: "bold",
     marginTop: 8,
   },
   statLabel: {
     fontSize: 12,
-    color: "#FFFFFF",
+    color: "#146454",
     opacity: 0.8,
     marginTop: 4,
   },
@@ -452,21 +612,32 @@ const styles = StyleSheet.create({
   },
   quickAction: {
     flex: 1,
-    marginHorizontal: 8,
+    marginHorizontal: 6,
     borderRadius: 16,
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 6,
   },
   quickActionGradient: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    width: "100%",
+    height: "100%",
   },
   quickActionText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#FFFFFF",
     fontWeight: "bold",
-    marginLeft: 8,
+    marginLeft: 6,
   },
 })
 

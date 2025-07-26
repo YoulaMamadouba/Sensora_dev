@@ -97,7 +97,7 @@ const VoiceToSignScreen: React.FC = () => {
   }))
 
   return (
-    <LinearGradient colors={["#182825", "#0f1f1c", "#182825"]} style={styles.container}>
+    <LinearGradient colors={["#FFFFFF", "#FFFFFF", "#FFFFFF"]} style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Voix → Langue des Signes</Text>
         <Text style={styles.subtitle}>Parlez et voyez la traduction en signes</Text>
@@ -106,8 +106,8 @@ const VoiceToSignScreen: React.FC = () => {
       {/* Avatar 3D Placeholder */}
       <View style={styles.avatarContainer}>
         <Animated.View style={[styles.avatar, avatarAnimatedStyle]}>
-          <LinearGradient colors={["#00E0B8", "#00c4a0"]} style={styles.avatarGradient}>
-            <Ionicons name="person" size={60} color="#182825" />
+          <LinearGradient colors={["#146454", "#029ED6"]} style={styles.avatarGradient}>
+            <Ionicons name="person" size={60} color="#FFFFFF" />
           </LinearGradient>
 
           {/* Glow effect pour l'avatar */}
@@ -117,10 +117,10 @@ const VoiceToSignScreen: React.FC = () => {
         {isProcessing && (
           <View style={styles.processingIndicator}>
             <LinearGradient
-              colors={["rgba(0, 224, 184, 0.2)", "rgba(0, 224, 184, 0.1)"]}
+              colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]}
               style={styles.processingGradient}
             >
-              <Ionicons name="sync" size={16} color="#00E0B8" />
+              <Ionicons name="sync" size={16} color="#146454" />
               <Text style={styles.processingText}>Traduction en cours...</Text>
             </LinearGradient>
           </View>
@@ -131,7 +131,7 @@ const VoiceToSignScreen: React.FC = () => {
       {transcribedText ? (
         <View style={styles.textContainer}>
           <LinearGradient
-            colors={["rgba(255, 255, 255, 0.1)", "rgba(255, 255, 255, 0.05)"]}
+            colors={["rgba(20, 100, 84, 0.05)", "rgba(2, 158, 214, 0.02)"]}
             style={styles.textGradient}
           >
             <Text style={styles.transcribedText}>{transcribedText}</Text>
@@ -156,7 +156,7 @@ const VoiceToSignScreen: React.FC = () => {
                   styles.wave,
                   {
                     height: 20 + index * 10,
-                    backgroundColor: "#00E0B8",
+                    backgroundColor: "#146454",
                     opacity: interpolate(waveOpacity.value, [0, 1], [0.3, 1]),
                   },
                 ]}
@@ -173,7 +173,7 @@ const VoiceToSignScreen: React.FC = () => {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={isRecording ? ["#FF6B6B", "#FF5252"] : ["#00E0B8", "#00c4a0"]}
+              colors={isRecording ? ["#FF0000", "#FF0000"] : ["#146454", "#029ED6"]}
               style={styles.micButtonGradient}
             >
               <Ionicons name={isRecording ? "stop" : "mic"} size={40} color="#FFFFFF" />
@@ -190,7 +190,7 @@ const VoiceToSignScreen: React.FC = () => {
       {/* Sous-titres */}
       <View style={styles.subtitlesContainer}>
         <Text style={styles.subtitlesTitle}>Sous-titres en temps réel</Text>
-        <LinearGradient colors={["rgba(0, 0, 0, 0.6)", "rgba(0, 0, 0, 0.4)"]} style={styles.subtitlesBox}>
+        <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.subtitlesBox}>
           <Text style={styles.subtitlesText}>
             {isRecording ? "Écoute en cours..." : transcribedText || "Aucun texte détecté"}
           </Text>
@@ -211,14 +211,14 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   title: {
-    fontSize: 24,
-    color: "#FFFFFF",
+    fontSize: 28,
+    color: "#146454",
     fontWeight: "bold",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#00E0B8",
+    color: "#146454",
     opacity: 0.8,
     textAlign: "center",
   },
@@ -245,8 +245,8 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: "#00E0B8",
-    opacity: 0.3,
+    backgroundColor: "#146454",
+    opacity: 0.2,
     top: -10,
     left: -10,
     zIndex: -1,
@@ -261,10 +261,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: "rgba(0, 224, 184, 0.3)",
+    borderColor: "rgba(20, 100, 84, 0.3)",
   },
   processingText: {
-    color: "#00E0B8",
+    color: "#146454",
     fontSize: 14,
     marginLeft: 8,
     fontWeight: "500",
@@ -274,17 +274,24 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   textGradient: {
-    padding: 16,
-    borderRadius: 16,
+    padding: 20,
+    borderRadius: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(20, 100, 84, 0.2)",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#146454",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   transcribedText: {
     fontSize: 18,
-    color: "#FFFFFF",
+    color: "#146454",
     textAlign: "center",
     lineHeight: 24,
+    fontWeight: "500",
   },
   signTranslation: {
     alignItems: "center",
@@ -295,7 +302,8 @@ const styles = StyleSheet.create({
   },
   signDescription: {
     fontSize: 12,
-    color: "#999",
+    color: "#146454",
+    opacity: 0.7,
     textAlign: "center",
   },
   controlsContainer: {
@@ -314,19 +322,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   micButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     overflow: "hidden",
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
+    elevation: 12,
+    shadowColor: "#146454",
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
-    shadowRadius: 10,
+    shadowRadius: 12,
     position: "relative",
   },
   micButtonActive: {
-    shadowColor: "#FF6B6B",
+    shadowColor: "#FF0000",
   },
   micButtonGradient: {
     flex: 1,
@@ -335,10 +343,10 @@ const styles = StyleSheet.create({
   },
   pulseCircle: {
     position: "absolute",
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#FF6B6B",
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "#FF0000",
     opacity: 0.3,
     top: -10,
     left: -10,
@@ -346,30 +354,38 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     fontSize: 16,
-    color: "#FFFFFF",
+    color: "#146454",
     marginTop: 16,
     opacity: 0.8,
+    fontWeight: "500",
   },
   subtitlesContainer: {
     paddingHorizontal: 20,
   },
   subtitlesTitle: {
     fontSize: 18,
-    color: "#FFFFFF",
+    color: "#146454",
     fontWeight: "bold",
     marginBottom: 12,
   },
   subtitlesBox: {
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(0, 224, 184, 0.3)",
+    borderColor: "rgba(20, 100, 84, 0.2)",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#146454",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   subtitlesText: {
     fontSize: 16,
-    color: "#FFFFFF",
+    color: "#146454",
     textAlign: "center",
     lineHeight: 22,
+    fontWeight: "500",
   },
 })
 

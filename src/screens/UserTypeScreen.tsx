@@ -77,12 +77,14 @@ const UserTypeScreen = () => {
   }))
 
   return (
-    <LinearGradient colors={["#182825", "#0f1f1c", "#182825"]} style={styles.container}>
-      {/* Éléments décoratifs */}
-      <View style={styles.decorativeElements}>
-        <View style={[styles.decorativeCircle, styles.circle1]} />
-        <View style={[styles.decorativeCircle, styles.circle2]} />
-        <View style={[styles.decorativeCircle, styles.circle3]} />
+    <LinearGradient colors={["#FFFFFF", "#F1F9F9", "#E8F6F9"]} style={styles.container}>
+      {/* Thème innovant : Inclusion universelle */}
+      <View style={styles.backgroundPatterns}>
+        <View style={styles.universalSigns} />
+        <View style={styles.bridgeElements} />
+        <View style={styles.harmonyNodes} />
+        <View style={styles.connectionPaths} />
+        <View style={styles.inclusionSpheres} />
       </View>
 
       <Animated.View style={[styles.header, titleAnimatedStyle]}>
@@ -99,9 +101,9 @@ const UserTypeScreen = () => {
           <TouchableOpacity style={styles.card} onPress={() => handleUserTypeSelection("hearing")} activeOpacity={0.9}>
             <View style={styles.cardContent}>
               <View style={styles.iconContainer}>
-                <Ionicons name="mic" size={40} color="#00E0B8" />
+                                    <Ionicons name="mic" size={40} color="#029ED6" />
               </View>
-              <Text style={styles.cardTitle}>Entendant</Text>
+              <Text style={[styles.cardTitle, { color: "#029ED6" }]}>Entendant</Text>
             </View>
           </TouchableOpacity>
         </Animated.View>
@@ -167,20 +169,20 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   welcomeText: {
-    fontSize: 20,
-    color: "#FFFFFF",
-    fontWeight: "300",
+    fontSize: 28,
+    color: "#146454",
+    fontWeight: "bold",
     marginBottom: 15,
-    opacity: 0.9,
+    opacity: 1,
   },
   logoContainer: {
-    backgroundColor: "rgba(0, 224, 184, 0.1)",
+    backgroundColor: "rgba(20, 100, 84, 0.1)",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "rgba(0, 224, 184, 0.3)",
+    borderColor: "rgba(20, 100, 84, 0.3)",
   },
   logo: {
     width: 300,
@@ -188,7 +190,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: "#FFFFFF",
+    color: "#146454",
     opacity: 0.8,
     textAlign: "center",
     lineHeight: 22,
@@ -206,15 +208,15 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     height: 200,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: "#FFFFFF",
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: "rgba(0, 224, 184, 0.3)",
+    borderColor: "rgba(20, 100, 84, 0.3)",
     overflow: "hidden",
     elevation: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
   },
   cardContent: {
@@ -227,17 +229,17 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(0, 224, 184, 0.1)",
+    backgroundColor: "rgba(20, 100, 84, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: "rgba(0, 224, 184, 0.3)",
+    borderColor: "rgba(20, 100, 84, 0.3)",
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: "#146454",
     textAlign: "center",
   },
   footer: {
@@ -247,10 +249,73 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: "#FFFFFF",
+    color: "#146454",
     opacity: 0.7,
     textAlign: "center",
     lineHeight: 20,
+  },
+  // Thème innovant : Inclusion universelle
+  backgroundPatterns: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    zIndex: 1,
+    pointerEvents: "none",
+  },
+  universalSigns: {
+    position: "absolute",
+    top: "8%",
+    left: "10%",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "rgba(2, 158, 214, 0.08)",
+    borderWidth: 2,
+    borderColor: "rgba(2, 158, 214, 0.2)",
+    pointerEvents: "none",
+  },
+  bridgeElements: {
+    position: "absolute",
+    top: "15%",
+    right: "12%",
+    width: 120,
+    height: 3,
+    backgroundColor: "rgba(20, 100, 84, 0.06)",
+    borderRadius: 1.5,
+    transform: [{ rotate: "20deg" }],
+    pointerEvents: "none",
+  },
+  harmonyNodes: {
+    position: "absolute",
+    bottom: "30%",
+    left: "8%",
+    width: 20,
+    height: 20,
+    backgroundColor: "rgba(2, 158, 214, 0.1)",
+    borderRadius: 10,
+    pointerEvents: "none",
+  },
+  connectionPaths: {
+    position: "absolute",
+    bottom: "25%",
+    right: "10%",
+    width: 100,
+    height: 4,
+    backgroundColor: "rgba(20, 100, 84, 0.05)",
+    borderRadius: 2,
+    transform: [{ rotate: "-15deg" }],
+    pointerEvents: "none",
+  },
+  inclusionSpheres: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: "rgba(20, 100, 84, 0.03)",
+    transform: [{ translateX: -75 }, { translateY: -75 }],
+    pointerEvents: "none",
   },
 })
 

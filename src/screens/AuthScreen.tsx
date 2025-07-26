@@ -100,7 +100,7 @@ const AuthScreen: React.FC = () => {
   }))
 
   return (
-    <LinearGradient colors={["#182825", "#0f1f1c", "#182825"]} style={styles.container}>
+    <LinearGradient colors={["#FFFFFF", "#F8F9FA", "#FFFFFF"]} style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           {/* Header */}
@@ -110,12 +110,12 @@ const AuthScreen: React.FC = () => {
             </TouchableOpacity>
 
             <View style={styles.titleContainer}>
-              <LinearGradient colors={["#00E0B8", "#00c4a0"]} style={styles.titleGradient}>
+              <LinearGradient colors={["#146454", "#0F4A3A"]} style={styles.titleGradient}>
                 <Text style={styles.title}>{isLogin ? "Connexion" : "Inscription"}</Text>
               </LinearGradient>
 
               <View style={styles.userTypeBadge}>
-                <Ionicons name={userType === "hearing" ? "ear" : "hand-left"} size={16} color="#00E0B8" />
+                <Ionicons name={userType === "hearing" ? "ear" : "hand-left"} size={16} color="#146454" />
                 <Text style={styles.userTypeText}>
                   {userType === "hearing" ? "Personne entendante" : "Personne sourde"}
                 </Text>
@@ -286,7 +286,7 @@ const AuthScreen: React.FC = () => {
                 disabled={isLoading}
               >
                 <LinearGradient
-                  colors={isLoading ? ["#999", "#666"] : ["#00E0B8", "#00c4a0"]}
+                  colors={isLoading ? ["#999", "#666"] : ["#146454", "#0F4A3A"]}
                   style={styles.buttonGradient}
                 >
                   {isLoading ? (
@@ -368,16 +368,16 @@ const styles = StyleSheet.create({
   userTypeBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0, 224, 184, 0.1)",
+    backgroundColor: "rgba(20, 100, 84, 0.1)",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(0, 224, 184, 0.3)",
+    borderColor: "rgba(20, 100, 84, 0.3)",
   },
   userTypeText: {
     fontSize: 14,
-    color: "#00E0B8",
+    color: "#146454",
     marginLeft: 8,
     fontWeight: "500",
   },
@@ -389,18 +389,23 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 16,
-    color: "#FFFFFF",
+    color: "#146454",
     fontWeight: "600",
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(20, 100, 84, 0.2)",
     paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   inputError: {
     borderColor: "#FF6B6B",
@@ -413,7 +418,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     fontSize: 16,
-    color: "#FFFFFF",
+    color: "#146454",
   },
   eyeButton: {
     padding: 8,
@@ -454,7 +459,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   forgotPasswordText: {
-    color: "#00E0B8",
+    color: "#146454",
     fontSize: 14,
     fontWeight: "500",
   },
@@ -466,12 +471,12 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   switchModeText: {
-    color: "#FFFFFF",
+    color: "#146454",
     fontSize: 14,
     opacity: 0.8,
   },
   switchModeLink: {
-    color: "#00E0B8",
+    color: "#029ED6",
     fontWeight: "600",
   },
 })
