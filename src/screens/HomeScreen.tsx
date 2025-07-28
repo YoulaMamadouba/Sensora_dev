@@ -184,7 +184,7 @@ const HomeScreen: React.FC = () => {
           <View style={styles.headerIcons}>
             <TouchableOpacity style={styles.iconButton}>
               <Animated.View style={[styles.notificationContainer, notificationAnimatedStyle]}>
-                <Ionicons name="notifications" size={24} color="#146454" />
+                <Ionicons name="notifications" size={26} color="#146454" />
                 <View style={styles.notificationBadge}>
                   <Text style={styles.notificationCount}>5</Text>
                 </View>
@@ -192,7 +192,7 @@ const HomeScreen: React.FC = () => {
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="settings" size={24} color="#146454" />
+              <Ionicons name="settings" size={26} color="#146454" />
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -215,10 +215,10 @@ const HomeScreen: React.FC = () => {
           </View>
 
           <Animated.View style={[styles.quoteContainer, quoteAnimatedStyle]}>
-            <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.quoteGradient}>
-              <Ionicons name="chatbubble" size={16} color="#146454" />
-              <Text style={styles.quote}>"Donnez une voix au silence et ouvrez les portes de la communication"</Text>
-            </LinearGradient>
+            <View style={styles.quoteSimple}>
+              <Ionicons name="chatbubble" size={18} color="#146454" />
+              <Text style={styles.quoteText}>"Donnez une voix au silence"</Text>
+            </View>
           </Animated.View>
         </Animated.View>
 
@@ -340,15 +340,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 20,
     marginTop: 20,
+    minHeight: 80, // Ajouté pour garantir l'espace
   },
   logoContainer: {
     flex: 0,
     paddingLeft: -20, // PUSHÉ À GAUCHE
   },
-  // LOGO DIMENSIONS EXACTES COMME CARROUSEL
+  // LOGO DIMENSIONS OPTIMISÉES POUR MOBILE
   logo: {
-    width: 320, // Même dimension que carouselLogo
-    height: 190, // Même dimension que carouselLogo
+    width: 180, // Réduit pour mobile
+    height: 110, // Réduit pour mobile
   },
   headerIcons: {
     flexDirection: "row",
@@ -441,23 +442,27 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: "hidden",
     marginHorizontal: 20,
+    marginTop: 10, // Ajouté pour plus d'espace
+    marginBottom: 10, // Ajouté pour plus d'espace
   },
-  quoteGradient: {
-    flexDirection: "row",
+  quoteSimple: {
+    backgroundColor: "rgba(20, 100, 84, 0.15)",
+    borderRadius: 15,
+    padding: 18,
+    flexDirection: "row", // Ajouté pour aligner horizontalement
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: "rgba(20, 100, 84, 0.3)",
   },
-  quote: {
-    fontSize: 14,
+  quoteText: {
+    fontSize: 16,
     color: "#146454",
     fontStyle: "italic",
     textAlign: "center",
-    flex: 1,
-    marginLeft: 8,
-    lineHeight: 20,
+    lineHeight: 22,
+    fontWeight: "700",
+    marginLeft: 8, // Ajouté pour espacer du texte
   },
   modulesContainer: {
     paddingHorizontal: 20,
