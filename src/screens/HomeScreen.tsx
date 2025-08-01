@@ -65,30 +65,34 @@ const HomeScreen: React.FC = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     
     // Navigation conditionnelle selon le module
-    switch (moduleName) {
-      case "voice-to-sign":
-        // Naviguer directement vers le module VoiceToSign
-        navigation.navigate("VoiceToSign" as never)
-        break
-      case "sign-to-voice":
-        // Naviguer directement vers le module SignToVoice
-        navigation.navigate("SignToVoice" as never)
-        break
-      case "health":
-        navigation.navigate("Health" as never)
-        break
-      case "education":
-        navigation.navigate("Education" as never)
-        break
-                  case "professional":
-              navigation.navigate("Professional" as never)
-              break
-      case "translation":
-        navigation.navigate("Translation" as never)
-        break
-      default:
-        navigation.navigate(screenName as never)
-    }
+      switch (moduleName) {
+        case "voice-to-sign":
+          // Naviguer directement vers le module VoiceToSign
+          navigation.navigate("VoiceToSign" as never)
+          break
+        case "sign-to-voice":
+          // Naviguer directement vers le module SignToVoice
+          navigation.navigate("SignToVoice" as never)
+          break
+        case "text-to-sign":
+          // Naviguer directement vers le module TextToSign
+          navigation.navigate("TextToSign" as never)
+          break
+        case "health":
+          navigation.navigate("Health" as never)
+          break
+        case "education":
+          navigation.navigate("Education" as never)
+          break
+                    case "professional":
+                navigation.navigate("Professional" as never)
+                break
+        case "translation":
+          navigation.navigate("Translation" as never)
+          break
+        default:
+          navigation.navigate(screenName as never)
+      }
   }
 
   const avatarAnimatedStyle = useAnimatedStyle(() => ({
@@ -134,6 +138,14 @@ const HomeScreen: React.FC = () => {
       icon: "hand-left",
       color: "#029ED6", // Couleur secondaire
       screen: "Education",
+    },
+    {
+      id: "text-to-sign",
+      title: "Texte → Signes",
+      description: "Convertir du texte en séquences de gestes ou emojis",
+      icon: "hand-right",
+      color: "#029ED6",
+      screen: "TextToSign",
     },
     {
       id: "health",

@@ -12,6 +12,7 @@ import VoiceToSignModule from "../screens/modules/VoiceToSignModule"
 import SignToVoiceModule from "../screens/modules/SignToVoiceModule"
 import TranslationScreen from "../screens/modules/TranslationScreen"
 import ProfileScreen from "../screens/ProfileScreen"
+import TextToSignModule from "../screens/modules/TextToSignModule"
 
 const Tab = createBottomTabNavigator()
 const Stack = createStackNavigator()
@@ -24,6 +25,7 @@ const MainTabNavigator: React.FC = () => {
       <Stack.Screen name="SignToVoice" component={SignToVoiceModule} />
       <Stack.Screen name="Translation" component={TranslationScreen} />
       <Stack.Screen name="Professional" component={ProfessionalScreen} />
+      <Stack.Screen name="TextToSign" component={TextToSignModule} />
     </Stack.Navigator>
   )
 }
@@ -49,8 +51,8 @@ const MainTabs: React.FC = () => {
               iconName = focused ? "person" : "person-outline"
               break
 
-            default:
-              iconName = "circle"
+            // default:
+            //   iconName = "circle"
           }
 
           return (

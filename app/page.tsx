@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#182825',
-    minHeight: '100vh',
+    //minHeight: '100vh',
   },
   header: {
     paddingTop: 60,
