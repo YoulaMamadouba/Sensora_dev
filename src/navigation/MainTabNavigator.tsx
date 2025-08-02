@@ -17,6 +17,15 @@ import TextToSignModule from "../screens/modules/TextToSignModule"
 const Tab = createBottomTabNavigator()
 const Stack = createStackNavigator()
 
+export type RootStackParamList = {
+  MainTabs: undefined
+  VoiceToSign: undefined
+  SignToVoice: undefined
+  Translation: undefined
+  Professional: undefined
+  TextToSign: undefined
+}
+
 const MainTabNavigator: React.FC = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

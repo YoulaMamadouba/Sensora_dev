@@ -16,13 +16,15 @@ import Animated, {
 } from "react-native-reanimated"
 import { useAuth } from "../context/AuthContext"
 import { useNavigation } from "@react-navigation/native"
+import type { StackNavigationProp } from "@react-navigation/stack"
+import type { RootStackParamList } from "../navigation/MainTabNavigator"
 import * as Haptics from "expo-haptics"
 
 const { width } = Dimensions.get("window")
 
 const HomeScreen: React.FC = () => {
   const { user, userType } = useAuth()
-  const navigation = useNavigation()
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
 
   const avatarScale = useSharedValue(1)
   const cardOpacity = useSharedValue(0)
