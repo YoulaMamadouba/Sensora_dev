@@ -64,7 +64,9 @@ const AuthScreen: React.FC = () => {
   const toggleAuthMode = () => {
     setIsLogin(!isLogin)
     reset()
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    }
 
     // Animation de transition
     formOpacity.value = withSequence(withTiming(0.3, { duration: 200 }), withTiming(1, { duration: 400 }))
@@ -72,7 +74,9 @@ const AuthScreen: React.FC = () => {
 
   const handleForgotPassword = () => {
     setShowForgotPassword(true)
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    }
 
     setTimeout(() => {
       Alert.alert(
@@ -246,44 +250,69 @@ const AuthScreen: React.FC = () => {
             <Animated.View style={buttonAnimatedStyle}>
               <TouchableOpacity
                 style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+                disabled={isLoading}
                 onPress={handleSubmit(async (data: FormData) => {
-                  if (!userType) return
+                  if (!userType) {
+                    Alert.alert("Erreur", "Veuillez sélectionner un type d'utilisateur (sourd/entendant)")
+                    return
+                  }
 
                   setIsLoading(true)
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-
-                  formOpacity.value = withTiming(0.7)
-                  buttonScale.value = withSpring(0.95)
-
+                  if (Platform.OS !== 'web') {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                  }
+                  
                   try {
-                    let success = false
-
                     if (isLogin) {
-                      success = await login(data.email, data.password, userType)
+                      // Connexion
+                      const success = await login(data.email, data.password, userType)
+                      if (success) {
+                        if (Platform.OS !== 'web') {
+                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                        }
+                        // Redirection vers l'écran principal après connexion réussie
+                        navigation.reset({
+                          index: 0,
+                          routes: [{ name: 'Main' as never }],
+                        })
+                      } else {
+                        if (Platform.OS !== 'web') {
+                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+                        }
+                        Alert.alert("Erreur", "Email ou mot de passe incorrect")
+                      }
                     } else {
+                      // Inscription
                       if (data.password !== data.confirmPassword) {
                         Alert.alert("Erreur", "Les mots de passe ne correspondent pas")
                         return
                       }
-                      success = await register(data.email, data.password, data.name || "", userType)
+                      
+                      const success = await register(data.email, data.password, data.name || "", userType)
+                      
+                      if (success) {
+                        // Si l'inscription et la connexion automatique réussissent
+                        if (Platform.OS !== 'web') {
+                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                        }
+                        // Redirection vers l'écran principal
+                        navigation.reset({
+                          index: 0,
+                          routes: [{ name: 'Main' as never }],
+                        })
+                      }
+                      // Si l'inscription nécessite une confirmation par email
+                      // La méthode register affichera déjà une alerte
                     }
-
-                    if (success) {
-                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-                      navigation.navigate("Main" as never)
-                    } else {
-                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-                      Alert.alert("Erreur", "Identifiants incorrects")
-                    }
-                  } catch (error) {
-                    Alert.alert("Erreur", "Une erreur est survenue")
+                  } catch (err) {
+                    console.error('Erreur lors de l\'authentification:', err)
+                    // Ne pas afficher d'alerte ici, car les erreurs sont déjà gérées dans les méthodes login/register
                   } finally {
                     setIsLoading(false)
                     formOpacity.value = withTiming(1)
                     buttonScale.value = withSpring(1)
                   }
                 })}
-                disabled={isLoading}
               >
                 <LinearGradient
                   colors={isLoading ? ["#999", "#666"] : ["#146454", "#0F4A3A"]}

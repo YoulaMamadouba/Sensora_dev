@@ -1,3 +1,4 @@
+import React from 'react'
 import { NavigationContainer } from "@react-navigation/native"
 import { createStackNavigator } from "@react-navigation/stack"
 import { StatusBar } from "expo-status-bar"
@@ -8,14 +9,16 @@ import UserTypeScreen from "./src/screens/UserTypeScreen"
 import AuthScreen from "./src/screens/AuthScreen"
 import MainTabNavigator from "./src/navigation/MainTabNavigator"
 import { AuthProvider } from "./src/context/AuthContext"
+import { SupabaseAuthProvider } from "./src/context/SupabaseAuthContext"
 
 const Stack = createStackNavigator()
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <NavigationContainer>
+      <SupabaseAuthProvider>
+        <AuthProvider>
+          <NavigationContainer>
           <StatusBar style="light" backgroundColor="#182825" />
           <Stack.Navigator
             screenOptions={{
@@ -41,8 +44,9 @@ export default function App() {
             <Stack.Screen name="Auth" component={AuthScreen} />
             <Stack.Screen name="Main" component={MainTabNavigator} />
           </Stack.Navigator>
-        </NavigationContainer>
-      </AuthProvider>
+          </NavigationContainer>
+        </AuthProvider>
+      </SupabaseAuthProvider>
     </GestureHandlerRootView>
   )
 }
