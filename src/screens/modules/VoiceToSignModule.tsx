@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, StatusBar } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, StatusBar, Alert } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
 import Animated, {
@@ -19,16 +19,26 @@ import Animated, {
 } from "react-native-reanimated"
 import * as Haptics from "expo-haptics"
 import { useNavigation } from "@react-navigation/native"
+import { Audio } from 'expo-av'
+import * as FileSystem from 'expo-file-system'
+import { useAuth } from "../../context/AuthContext"
+import { useSupabaseAuth } from "../../context/SupabaseAuthContext"
 
 const { width, height } = Dimensions.get("window")
 
 const VoiceToSignModule: React.FC = () => {
   const navigation = useNavigation()
+  const { user } = useAuth()
+  const { supabaseService } = useSupabaseAuth()
+  
   const [isRecording, setIsRecording] = useState(false)
   const [transcribedText, setTranscribedText] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [confidence, setConfidence] = useState(0)
   const [currentSign, setCurrentSign] = useState("")
+  const [recording, setRecording] = useState<Audio.Recording | null>(null)
+  const [audioUri, setAudioUri] = useState<string | null>(null)
+  const [signEmojis, setSignEmojis] = useState("")
 
   // Animations values
   const micScale = useSharedValue(1)
@@ -41,6 +51,16 @@ const VoiceToSignModule: React.FC = () => {
   const waveScale = useSharedValue(0)
   const glowOpacity = useSharedValue(0)
   const progressValue = useSharedValue(0)
+
+  // Demander les permissions audio
+  useEffect(() => {
+    (async () => {
+      const { status } = await Audio.requestPermissionsAsync()
+      if (status !== 'granted') {
+        Alert.alert('Permission refusée', 'L\'accès au microphone est nécessaire pour enregistrer l\'audio.')
+      }
+    })()
+  }, [])
 
   // Animation d'entrée
   useEffect(() => {
@@ -104,31 +124,61 @@ const VoiceToSignModule: React.FC = () => {
     }
   }, [isRecording])
 
-  const handleRecordToggle = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+  const startRecording = async () => {
+    try {
+      console.log('🎤 Début de l\'enregistrement...')
+      
+      // Configurer l'audio
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      })
 
-    if (!isRecording) {
+      // Créer un nouvel enregistrement
+      const { recording: newRecording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      )
+      
+      setRecording(newRecording)
       setIsRecording(true)
       setConfidence(0)
       
-      // Simulation d'enregistrement avec progression
-      const progressInterval = setInterval(() => {
-        setConfidence(prev => {
-          if (prev >= 100) {
-            clearInterval(progressInterval)
-            return 100
-          }
-          return prev + Math.random() * 15
-        })
-      }, 200)
+      console.log('✅ Enregistrement démarré')
+    } catch (err) {
+      console.error('❌ Erreur lors du démarrage de l\'enregistrement:', err)
+      Alert.alert('Erreur', 'Impossible de démarrer l\'enregistrement')
+    }
+  }
 
-      setTimeout(() => {
-        setIsRecording(false)
-        setIsProcessing(true)
-        clearInterval(progressInterval)
+  const stopRecording = async () => {
+    try {
+      console.log('🛑 Arrêt de l\'enregistrement...')
+      
+      if (!recording) return
+
+      setIsRecording(false)
+      setIsProcessing(true)
+      
+      await recording.stopAndUnloadAsync()
+      const uri = recording.getURI()
+      setRecording(null)
+      
+      if (uri) {
+        setAudioUri(uri)
+        console.log('✅ Enregistrement terminé:', uri)
         
+        // Upload vers Supabase
+        await uploadAudioToSupabase(uri)
+        
+        // Simulation de transcription (remplacer par une vraie API)
         setTimeout(() => {
-          setTranscribedText("Bonjour, comment allez-vous aujourd'hui ?")
+          const mockTranscription = "Bonjour, comment allez-vous aujourd'hui ?"
+          setTranscribedText(mockTranscription)
+          
+          // Générer les emojis de signes
+          const emojis = generateSignEmojis(mockTranscription)
+          setSignEmojis(emojis)
+          
           setIsProcessing(false)
           setConfidence(95)
           
@@ -139,9 +189,102 @@ const VoiceToSignModule: React.FC = () => {
             withSpring(0, { damping: 12 })
           )
         }, 2000)
-      }, 3000)
+      }
+    } catch (err) {
+      console.error('❌ Erreur lors de l\'arrêt de l\'enregistrement:', err)
+      Alert.alert('Erreur', 'Impossible d\'arrêter l\'enregistrement')
+      setIsProcessing(false)
+    }
+  }
+
+  const uploadAudioToSupabase = async (uri: string) => {
+    try {
+      if (!supabaseService || !user) {
+        console.warn('⚠️ Service Supabase ou utilisateur non disponible')
+        return
+      }
+
+      console.log('📤 Upload du fichier audio vers Supabase...')
+      
+      // Générer un nom de fichier unique
+      const timestamp = Date.now()
+      const fileName = `recording_${timestamp}.m4a`
+      
+      // Upload vers Supabase
+      const audioFile = await supabaseService.uploadAudioFile(uri, fileName, 'audio/m4a')
+      
+      if (audioFile) {
+        console.log('✅ Fichier audio uploadé avec succès:', audioFile.id)
+        // Ici vous pourriez appeler une API de transcription avec l'URL du fichier
+      } else {
+        console.error('❌ Échec de l\'upload du fichier audio')
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'upload:', error)
+      Alert.alert('Erreur', 'Impossible d\'uploader le fichier audio')
+    }
+  }
+
+  const generateSignEmojis = (text: string) => {
+    // Mapping simple de mots vers des emojis de signes
+    const signMapping: { [key: string]: string } = {
+      'bonjour': '👋',
+      'salut': '👋',
+      'hello': '👋',
+      'merci': '🙏',
+      'oui': '👍',
+      'non': '👎',
+      'bien': '👍',
+      'mal': '👎',
+      'comment': '🤔',
+      'aller': '🚶',
+      'manger': '🍽️',
+      'boire': '🥤',
+      'dormir': '😴',
+      'travail': '💼',
+      'famille': '👨‍👩‍👧‍👦',
+      'ami': '🤝',
+      'amour': '❤️',
+      'temps': '⏰',
+      'jour': '☀️',
+      'nuit': '🌙',
+      'eau': '💧',
+      'pain': '🍞',
+      'maison': '🏠',
+      'voiture': '🚗',
+      'livre': '📚',
+      'musique': '🎵',
+      'sport': '⚽',
+      'école': '🎓',
+      'hôpital': '🏥',
+      'magasin': '🛒'
+    }
+
+    const words = text.toLowerCase().split(' ')
+    const emojis: string[] = []
+    
+    words.forEach(word => {
+      const cleanWord = word.replace(/[.,!?]/g, '')
+      if (signMapping[cleanWord]) {
+        emojis.push(signMapping[cleanWord])
+      }
+    })
+
+    // Ajouter des emojis génériques si aucun mapping n'est trouvé
+    if (emojis.length === 0) {
+      emojis.push('🤟', '👋', '✋', '👍', '🤝')
+    }
+
+    return emojis.join(' ')
+  }
+
+  const handleRecordToggle = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+    if (!isRecording) {
+      await startRecording()
     } else {
-      setIsRecording(false)
+      await stopRecording()
     }
   }
 
@@ -276,7 +419,7 @@ const VoiceToSignModule: React.FC = () => {
               </LinearGradient>
 
               <View style={styles.signTranslation}>
-                <Text style={styles.signText}>🤟 👋 ✋ 👍 🤝</Text>
+                <Text style={styles.signText}>{signEmojis || "🤟 👋 ✋ 👍 🤝"}</Text>
                 <Text style={styles.signDescription}>Traduction en langue des signes</Text>
               </View>
             </View>

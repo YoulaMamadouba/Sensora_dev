@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         id: supabaseUser.id,
         email: supabaseUser.email || '',
         name: userProfile.full_name,
-        userType: userProfile.user_role === 'entendant' ? 'hearing' : 'deaf'
+        userType: userProfile.user_role === 'sourd' ? 'deaf' : 'hearing'
       }
       setUser(mappedUser)
       setUserType(mappedUser.userType)
@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.log('📝 Tentative d\'inscription avec Supabase...')
         
         // Convertir le type vers le format Supabase
-        const userRole: 'entendant' | 'sourd' = type === 'hearing' ? 'entendant' : 'sourd'
+        const userRole: 'entendant' | 'sourd' = type === 'deaf' ? 'sourd' : 'entendant'
         
         // S'assurer que le type d'utilisateur est bien défini
         if (!type) {

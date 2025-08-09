@@ -1,288 +1,163 @@
-# 📱 Sensora - Application de Traduction et Communication
+# Sensora App
 
-Une application mobile premium de traduction voix ↔ langue des signes avec des modules spécialisés pour la santé, l'éducation et l'insertion professionnelle.
+Application mobile pour la traduction en temps réel entre la voix et la langue des signes.
 
-## 🎨 Palette de Couleurs
+## 🎯 Fonctionnalités
 
-- **Fond :** `#FFFFFF` (blanc)
-- **Couleur primaire :** `#146454` (vert foncé)
-- **Couleur secondaire :** `#029ED6` (bleu)
+### ✅ Implémentées
 
-## 🏗️ Architecture du Projet
+- **Authentification complète** avec Supabase
+  - Inscription avec sélection du type d'utilisateur (sourd/entendant)
+  - Connexion sécurisée
+  - Gestion des profils utilisateurs
 
-### 📁 Structure des Fichiers
+- **Module Voice-to-Sign** 
+  - Enregistrement audio en temps réel avec expo-av
+  - Upload automatique vers Supabase Storage (bucket `audio-recordings`)
+  - Transcription simulée avec génération d'emojis de signes
+  - Interface utilisateur moderne avec animations
 
+- **Architecture backend**
+  - Base de données Supabase avec tables `users` et `audio_files`
+  - Stockage sécurisé des fichiers audio
+  - Politiques de sécurité RLS configurées
+
+### 🔄 En cours
+
+- Intégration d'une vraie API de transcription (OpenAI, Google Speech-to-Text)
+- Traduction en langue des signes avec IA
+- Synchronisation en temps réel
+
+## 🏗️ Architecture
+
+### Base de données
+
+```sql
+-- Table users
+CREATE TABLE public.users (
+  id uuid PRIMARY KEY REFERENCES auth.users(id),
+  email text UNIQUE NOT NULL,
+  full_name text NOT NULL,
+  user_role text CHECK (user_role IN ('entendant', 'sourd')) DEFAULT 'entendant',
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table audio_files
+CREATE TABLE public.audio_files (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  file_name text NOT NULL,
+  file_path text NOT NULL,
+  file_size bigint NOT NULL,
+  mime_type text NOT NULL,
+  uploaded_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
 ```
-sensora-app/
-├── 📱 Interface Utilisateur
-│   ├── src/screens/
-│   │   ├── IntroScreen.tsx (22KB) - Écran d'introduction avec carousel
-│   │   ├── AuthScreen.tsx (16KB) - Connexion/inscription
-│   │   ├── UserTypeScreen.tsx (8.6KB) - Sélection du type d'utilisateur
-│   │   ├── HomeScreen.tsx (18KB) - Écran d'accueil principal
-│   │   └── ProfileScreen.tsx (12KB) - Gestion du profil utilisateur
-│   │
-│   └── src/screens/modules/
-│       ├── VoiceToSignModule.tsx (20KB) - Traduction voix → signes
-│       ├── SignToVoiceModule.tsx (26KB) - Traduction signes → voix
-│       ├── HealthScreen.tsx (26KB) - Surveillance santé
-│       ├── EducationScreen.tsx (25KB) - Contenu éducatif
-│       ├── ProfessionalScreen.tsx (34KB) - Outils professionnels
-│       └── TranslationScreen.tsx (33KB) - Traduction langues locales
-│
-├── 🧭 Navigation
-│   └── src/navigation/MainTabNavigator.tsx (3.8KB) - Configuration navigation
-│
-├── 🔐 Authentification
-│   └── src/context/AuthContext.tsx (2.3KB) - Gestion état global
-│
-├── ⚙️ Configuration
-│   ├── App.tsx (1.8KB) - Point d'entrée principal
-│   ├── package.json (1.2KB) - Dépendances et scripts
-│   ├── app.json (754B) - Configuration Expo
-│   ├── tsconfig.json (67B) - Configuration TypeScript
-│   └── babel.config.js (155B) - Configuration Babel
-│
-├── 🌐 Support Web
-│   └── app/page.tsx (2.3KB) - Version web
-│
-└── 🖼️ Assets
-    └── assets/logo.png (45KB) - Logo principal
-```
 
-## 📱 Écrans Principaux
+### Stockage
 
-### 🎬 **IntroScreen.tsx** (22KB - 824 lignes)
-**Rôle :** Écran d'introduction avec carousel animé
-- **Fonctionnalités :**
-  - Carousel avec 3 slides animées
-  - Animations Reanimated avancées
-  - Navigation vers l'authentification
-  - Design premium avec palette de couleurs
+- Bucket Supabase : `audio-recordings`
+- Structure : `{user_id}/{timestamp}_{filename}.m4a`
+- Politiques de sécurité configurées
 
-### 🔐 **AuthScreen.tsx** (16KB - 485 lignes)
-**Rôle :** Écran de connexion et inscription
-- **Fonctionnalités :**
-  - Formulaire de connexion avec validation
-  - Animations d'entrée fluides
-  - Gestion des erreurs
-  - Navigation vers la sélection du type d'utilisateur
+## 🚀 Installation
 
-### 👤 **UserTypeScreen.tsx** (8.6KB - 323 lignes)
-**Rôle :** Sélection du profil utilisateur
-- **Fonctionnalités :**
-  - Choix entre différents types d'utilisateurs
-  - Animations de sélection interactives
-  - Navigation vers l'écran d'accueil
-
-### 🏠 **HomeScreen.tsx** (18KB - 644 lignes)
-**Rôle :** Écran d'accueil principal
-- **Fonctionnalités :**
-  - Navigation vers tous les modules
-  - Logo animé et header centré
-  - Cards de modules interactives
-  - Citation avec icône de message
-  - Profil utilisateur avec avatar
-  - Design premium avec palette de couleurs
-
-### 👤 **ProfileScreen.tsx** (12KB - 449 lignes)
-**Rôle :** Gestion complète du profil utilisateur
-- **Fonctionnalités :**
-  - Informations utilisateur détaillées
-  - Statistiques personnelles
-  - Menu de paramètres complet
-  - Animations d'avatar et effets de glow
-  - Design premium avec gradients
-
-## 🧩 Modules Fonctionnels
-
-### 🗣️ **VoiceToSignModule.tsx** (20KB - 705 lignes)
-**Rôle :** Traduction voix → langue des signes en temps réel
-- **Fonctionnalités :**
-  - Enregistrement vocal avec animations de micro
-  - Ondes sonores animées pendant l'enregistrement
-  - Barre de progression de confiance
-  - Affichage des signes traduits avec émojis
-  - Statistiques de session (durée, précision, sessions)
-  - Sous-titres en temps réel
-  - Design premium avec avatar 3D et animations
-
-### 🤟 **SignToVoiceModule.tsx** (26KB - 888 lignes)
-**Rôle :** Traduction langue des signes → voix
-- **Fonctionnalités :**
-  - Mode caméra et mode manuel
-  - Détection de signes avec précision
-  - Conversion en texte et synthèse vocale
-  - Animations d'avatar 3D avec rotation
-  - Statistiques de précision détaillées
-  - Conseils et astuces
-  - Design premium avec palette de couleurs
-
-### ❤️ **HealthScreen.tsx** (26KB - 901 lignes)
-**Rôle :** Surveillance complète de la santé
-- **Fonctionnalités :**
-  - Métriques en temps réel (rythme cardiaque, stress, niveau sonore, tension artérielle, oxygène, température)
-  - Cartes interactives avec animations
-  - Graphiques de tendances
-  - Conseils de santé personnalisés
-  - Animations de cœur pulsant
-  - Valeurs affichées avec 2 décimales
-  - Design premium avec palette de couleurs
-
-### 📚 **EducationScreen.tsx** (25KB - 888 lignes)
-**Rôle :** Contenu éducatif et formation
-- **Fonctionnalités :**
-  - Profil utilisateur avec niveau et barre d'expérience
-  - Catégories de cours avec filtrage
-  - Liste détaillée des cours avec descriptions
-  - Section achievements avec badges
-  - Animations de progression
-  - Design premium avec palette de couleurs
-
-### 💼 **ProfessionalScreen.tsx** (34KB - 1181 lignes)
-**Rôle :** Outils professionnels et réunions
-- **Fonctionnalités :**
-  - Statut de réunion en temps réel
-  - Liste de participants avec indicateurs de parole
-  - Transcription en temps réel avec enregistrement
-  - Réunions à venir avec notifications
-  - Outils professionnels spécialisés
-  - Section achievements professionnels
-  - Design premium avec palette de couleurs
-
-### 🌍 **TranslationScreen.tsx** (33KB - 1152 lignes)
-**Rôle :** Traduction des langues locales
-- **Fonctionnalités :**
-  - Grille de sélection de langues avec détails
-  - Input texte et voix
-  - Résultats de traduction avec lecture audio
-  - Historique des traductions
-  - Langues favorites
-  - Section achievements
-  - Design premium avec palette de couleurs
-
-## 🧭 Navigation et État Global
-
-### 🧭 **MainTabNavigator.tsx** (3.8KB - 120 lignes)
-**Rôle :** Configuration de la navigation principale
-- **Fonctionnalités :**
-  - Stack Navigator pour les modules spécialisés
-  - Tab Navigator pour les écrans principaux
-  - Navigation directe vers les modules depuis HomeScreen
-  - Configuration des routes et transitions
-
-### 🔐 **AuthContext.tsx** (2.3KB - 95 lignes)
-**Rôle :** Gestion globale de l'état d'authentification
-- **Fonctionnalités :**
-  - État de connexion utilisateur
-  - Type d'utilisateur (étudiant, professionnel, etc.)
-  - Fonctions de connexion et déconnexion
-  - Provider pour l'application entière
-
-## ⚙️ Configuration et Support
-
-### 📱 **App.tsx** (1.8KB - 49 lignes)
-**Rôle :** Point d'entrée principal de l'application
-- **Fonctionnalités :**
-  - Provider AuthContext
-  - Navigation principale
-  - Gestion des états globaux
-  - Configuration initiale
-
-### 🌐 **app/page.tsx** (2.3KB - 93 lignes)
-**Rôle :** Version web de l'application
-- **Fonctionnalités :**
-  - Interface web responsive
-  - Navigation web adaptée
-  - Design optimisé pour le web
-
-### 📦 **package.json** (1.2KB - 42 lignes)
-**Rôle :** Configuration des dépendances et scripts
-- **Dépendances principales :**
-  - React Native et Expo
-  - React Native Reanimated
-  - expo-linear-gradient
-  - @expo/vector-icons
-  - expo-haptics
-  - @react-navigation/native
-
-### ⚙️ **app.json** (754B - 32 lignes)
-**Rôle :** Configuration Expo et métadonnées
-- **Contenu :**
-  - Nom et version de l'app
-  - Orientation et permissions
-  - Configuration du splash screen
-
-## 🎨 Technologies Utilisées
-
-### 📱 **Framework Principal**
-- **React Native** : Framework cross-platform
-- **Expo** : Plateforme de développement simplifiée
-- **TypeScript** : Typage statique pour la robustesse
-
-### 🎨 **UI/UX et Animations**
-- **React Native Reanimated** : Animations avancées et performantes
-- **expo-linear-gradient** : Dégradés et effets visuels
-- **@expo/vector-icons** : Icônes Ionicons
-- **expo-haptics** : Retour haptique pour l'interaction
-
-### 🧭 **Navigation**
-- **@react-navigation/native** : Navigation principale
-- **@react-navigation/stack** : Navigation par pile
-- **@react-navigation/bottom-tabs** : Navigation par onglets
-
-## 📊 Statistiques du Projet
-
-### 📈 **Métriques**
-- **Total de fichiers :** 16 fichiers de code
-- **Lignes de code :** ~15,000+ lignes
-- **Modules principaux :** 6 modules fonctionnels
-- **Écrans :** 12 écrans principaux
-- **Animations :** Animations Reanimated sur tous les écrans
-
-### 🎯 **Fonctionnalités Principales**
-- ✅ Traduction voix ↔ langue des signes en temps réel
-- ✅ Surveillance santé complète avec métriques
-- ✅ Contenu éducatif et formation
-- ✅ Outils professionnels et réunions
-- ✅ Traduction des langues locales
-- ✅ Profil utilisateur complet
-- ✅ Design premium avec animations avancées
-
-## 🚀 Installation et Démarrage
-
+1. **Cloner le projet**
 ```bash
-# Nettoyage complet pour éviter les conflits
-rm -rf node_modules
-rm package-lock.json
-npm cache clean --force
-
-# Installation des dépendances
-npm install
-
-# Installation avec toutes les dépendances (deps)
-npm install --save-dev
-
-# Installation en évitant les conflits de dépendances peer
-npm install --legacy-peer-deps
-
-# Démarrage en mode développement
-npm start
-
-# Démarrage avec tunnel pour test mobile
-npx expo start --tunnel
-
-# Démarrage en mode local
-npx expo start --localhost
+git clone <repository-url>
+cd sensora-app
 ```
 
-## 📱 Compatibilité
+2. **Installer les dépendances**
+```bash
+npm install
+```
 
-- **iOS :** 12.0+
-- **Android :** 6.0+
-- **Web :** Navigateurs modernes
-- **Expo Go :** Compatible
+3. **Configuration Supabase**
+   - Créer un projet Supabase
+   - Exécuter le script `supabase-setup.sql`
+   - Configurer les variables d'environnement :
+     ```env
+     EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+     EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+     ```
 
----
+4. **Lancer l'application**
+```bash
+npx expo start
+```
 
-**Sensora** - Donnez une voix au silence 🚀✨ 
+## 📱 Utilisation
+
+1. **Inscription/Connexion**
+   - Choisir le type d'utilisateur (sourd/entendant)
+   - Créer un compte ou se connecter
+
+2. **Enregistrement audio**
+   - Aller dans le module "Voix → Langue des Signes"
+   - Appuyer sur le bouton micro pour commencer l'enregistrement
+   - Parler clairement
+   - Appuyer à nouveau pour arrêter
+
+3. **Résultats**
+   - Le fichier audio est automatiquement uploadé vers Supabase
+   - La transcription apparaît avec des emojis de signes
+   - Interface animée et moderne
+
+## 🔧 Configuration
+
+### Variables d'environnement
+
+Créer un fichier `.env` à la racine :
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Permissions
+
+L'application nécessite les permissions suivantes :
+- Microphone (pour l'enregistrement audio)
+- Stockage (pour sauvegarder les fichiers)
+
+## 🐛 Correction des bugs
+
+### Problème résolu : Type d'utilisateur incorrect
+
+**Problème** : Le type d'utilisateur sélectionné (sourd) était enregistré comme "entendant" dans la base de données.
+
+**Solution** : Correction du mapping dans `src/context/AuthContext.tsx` :
+```typescript
+// Avant (incorrect)
+userType: userProfile.user_role === 'entendant' ? 'hearing' : 'deaf'
+const userRole: 'entendant' | 'sourd' = type === 'hearing' ? 'entendant' : 'sourd'
+
+// Après (correct)
+userType: userProfile.user_role === 'sourd' ? 'deaf' : 'hearing'
+const userRole: 'entendant' | 'sourd' = type === 'deaf' ? 'sourd' : 'entendant'
+```
+
+## 📊 Statut du projet
+
+- ✅ Authentification Supabase
+- ✅ Enregistrement audio
+- ✅ Upload vers Supabase Storage
+- ✅ Interface utilisateur moderne
+- ✅ Gestion des types d'utilisateur
+- 🔄 Transcription réelle (simulation actuelle)
+- 🔄 Traduction en langue des signes
+- 🔄 API de transcription intégrée
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Commit les changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+## 📄 Licence
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails. 
