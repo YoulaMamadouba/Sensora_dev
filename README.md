@@ -10,23 +10,32 @@ Application mobile pour la traduction en temps réel entre la voix et la langue 
   - Inscription avec sélection du type d'utilisateur (sourd/entendant)
   - Connexion sécurisée
   - Gestion des profils utilisateurs
+  - Correction automatique des types d'utilisateur
 
 - **Module Voice-to-Sign** 
   - Enregistrement audio en temps réel avec expo-av
   - Upload automatique vers Supabase Storage (bucket `audio-recordings`)
-  - Transcription simulée avec génération d'emojis de signes
+  - **Transcription réelle avec OpenAI Whisper**
+  - **Traduction en langue des signes avec GPT-3.5**
+  - Génération d'emojis de signes intelligente
   - Interface utilisateur moderne avec animations
 
 - **Architecture backend**
   - Base de données Supabase avec tables `users` et `audio_files`
   - Stockage sécurisé des fichiers audio
   - Politiques de sécurité RLS configurées
+  - **API OpenAI intégrée pour la transcription et traduction**
+
+- **Tests et validation**
+  - Utilitaires de test pour valider les configurations
+  - Tests de connexion Supabase et OpenAI
+  - Validation des variables d'environnement
 
 ### 🔄 En cours
 
-- Intégration d'une vraie API de transcription (OpenAI, Google Speech-to-Text)
-- Traduction en langue des signes avec IA
 - Synchronisation en temps réel
+- Tests unitaires complets
+- Optimisation des performances
 
 ## 🏗️ Architecture
 
@@ -61,6 +70,12 @@ CREATE TABLE public.audio_files (
 - Structure : `{user_id}/{timestamp}_{filename}.m4a`
 - Politiques de sécurité configurées
 
+### Services
+
+- **SupabaseService** : Gestion de l'authentification et du stockage
+- **OpenAIService** : Transcription audio et traduction LSF
+- **TestUtils** : Validation et tests des fonctionnalités
+
 ## 🚀 Installation
 
 1. **Cloner le projet**
@@ -74,16 +89,24 @@ cd sensora-app
 npm install
 ```
 
-3. **Configuration Supabase**
+3. **Configuration des variables d'environnement**
+   
+   Créer un fichier `.env` à la racine :
+   ```env
+   # Supabase
+   EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   
+   # OpenAI
+   EXPO_PUBLIC_OPENAI_API_KEY=your_openai_api_key
+   ```
+
+4. **Configuration Supabase**
    - Créer un projet Supabase
    - Exécuter le script `supabase-setup.sql`
-   - Configurer les variables d'environnement :
-     ```env
-     EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
-     EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-     ```
+   - Configurer les politiques de sécurité
 
-4. **Lancer l'application**
+5. **Lancer l'application**
 ```bash
 npx expo start
 ```
@@ -102,7 +125,9 @@ npx expo start
 
 3. **Résultats**
    - Le fichier audio est automatiquement uploadé vers Supabase
-   - La transcription apparaît avec des emojis de signes
+   - **Transcription réelle avec OpenAI Whisper**
+   - **Traduction en langue des signes avec GPT-3.5**
+   - Emojis de signes générés intelligemment
    - Interface animée et moderne
 
 ## 🔧 Configuration
@@ -112,8 +137,12 @@ npx expo start
 Créer un fichier `.env` à la racine :
 
 ```env
+# Supabase
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# OpenAI
+EXPO_PUBLIC_OPENAI_API_KEY=your_openai_api_key
 ```
 
 ### Permissions
@@ -122,33 +151,79 @@ L'application nécessite les permissions suivantes :
 - Microphone (pour l'enregistrement audio)
 - Stockage (pour sauvegarder les fichiers)
 
-## 🐛 Correction des bugs
+## 🐛 Corrections apportées
 
-### Problème résolu : Type d'utilisateur incorrect
+### ✅ Problème résolu : Type d'utilisateur incorrect
 
 **Problème** : Le type d'utilisateur sélectionné (sourd) était enregistré comme "entendant" dans la base de données.
 
-**Solution** : Correction du mapping dans `src/context/AuthContext.tsx` :
-```typescript
-// Avant (incorrect)
-userType: userProfile.user_role === 'entendant' ? 'hearing' : 'deaf'
-const userRole: 'entendant' | 'sourd' = type === 'hearing' ? 'entendant' : 'sourd'
+**Solution** : 
+1. Correction du mapping dans `src/context/AuthContext.tsx`
+2. Amélioration de la méthode `signUp` dans `SupabaseService`
+3. Ajout d'une méthode `checkAndFixUserRole` pour corriger les types existants
 
-// Après (correct)
+```typescript
+// Mapping correct
 userType: userProfile.user_role === 'sourd' ? 'deaf' : 'hearing'
 const userRole: 'entendant' | 'sourd' = type === 'deaf' ? 'sourd' : 'entendant'
 ```
+
+### ✅ Problème résolu : Table audio_files non remplie
+
+**Problème** : Les enregistrements audio n'étaient pas correctement enregistrés dans la table `audio_files`.
+
+**Solution** :
+1. Amélioration de la méthode `uploadAudioFile` dans `SupabaseService`
+2. Ajout de logs détaillés pour le debugging
+3. Gestion des erreurs et rollback en cas d'échec
+
+## 🎤 Fonctionnalités OpenAI
+
+### Transcription audio
+- Utilisation d'OpenAI Whisper pour la transcription
+- Support du français
+- Gestion des erreurs et fallback
+
+### Traduction LSF
+- Traduction en langue des signes française avec GPT-3.5
+- Descriptions détaillées des signes
+- Génération d'emojis intelligente
+
+### Gestion des erreurs
+- Fallback vers la transcription simulée si OpenAI n'est pas disponible
+- Messages d'erreur conviviaux
+- Logs détaillés pour le debugging
 
 ## 📊 Statut du projet
 
 - ✅ Authentification Supabase
 - ✅ Enregistrement audio
 - ✅ Upload vers Supabase Storage
+- ✅ **Transcription réelle avec OpenAI**
+- ✅ **Traduction en langue des signes**
 - ✅ Interface utilisateur moderne
 - ✅ Gestion des types d'utilisateur
-- 🔄 Transcription réelle (simulation actuelle)
-- 🔄 Traduction en langue des signes
-- 🔄 API de transcription intégrée
+- ✅ Tests et validation
+- 🔄 Synchronisation en temps réel
+- 🔄 Tests unitaires complets
+
+## 🧪 Tests
+
+### Exécuter les tests
+```typescript
+import TestUtils from './src/utils/testUtils'
+
+const testUtils = new TestUtils()
+const results = await testUtils.runAllTests()
+const report = testUtils.generateTestReport(results)
+console.log(report)
+```
+
+### Tests disponibles
+- Configuration des variables d'environnement
+- Connexion Supabase
+- Connexion OpenAI
+- Validation des fonctionnalités
 
 ## 🤝 Contribution
 

@@ -61,7 +61,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Essayer d'abord avec Supabase si configuré
       if (supabaseConfigured && supabaseService) {
         console.log('🔐 Tentative de connexion avec Supabase...')
-        await supabaseService.signIn(email, password)
+        const result = await supabaseService.signIn(email, password)
+        
+        if (result?.user) {
+          // Vérifier et corriger le type d'utilisateur si nécessaire
+          const expectedRole: 'entendant' | 'sourd' = type === 'deaf' ? 'sourd' : 'entendant'
+          await supabaseService.checkAndFixUserRole(result.user.id, expectedRole)
+        }
+        
         // L'état sera mis à jour automatiquement via useEffect
         return true
       } else {

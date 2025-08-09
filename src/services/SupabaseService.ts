@@ -85,15 +85,13 @@ class SupabaseService {
       if (data.user) {
         const { error: profileError } = await this.supabase
           .from('users')
-          .upsert({
+          .insert({
             id: data.user.id,
             email: data.user.email!,
             full_name: fullName,
             user_role: userRole,
+            created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'id',
-            ignoreDuplicates: true
           })
 
         if (profileError) {
@@ -102,6 +100,8 @@ class SupabaseService {
           await this.supabase.auth.admin.deleteUser(data.user.id).catch(console.error)
           throw profileError
         }
+
+        console.log('✅ Profil utilisateur créé avec le rôle:', userRole)
       }
 
       console.log('✅ Inscription réussie')
@@ -225,11 +225,17 @@ class SupabaseService {
 
       // Lire le fichier depuis l'URI locale
       const response = await fetch(fileUri)
+      if (!response.ok) {
+        throw new Error('Impossible de lire le fichier audio')
+      }
+      
       const blob = await response.blob()
       
       // Générer un nom de fichier unique
       const timestamp = Date.now()
       const uniqueFileName = `${this.currentUser.id}/${timestamp}_${fileName}`
+
+      console.log('📁 Nom de fichier unique:', uniqueFileName)
 
       // Upload vers Supabase Storage
       const { data: uploadData, error: uploadError } = await this.supabase.storage
@@ -239,12 +245,19 @@ class SupabaseService {
           upsert: false
         })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error('❌ Erreur upload storage:', uploadError)
+        throw uploadError
+      }
+
+      console.log('✅ Fichier uploadé vers storage:', uploadData)
 
       // Obtenir l'URL publique du fichier
       const { data: { publicUrl } } = this.supabase.storage
         .from('audio-recordings')
         .getPublicUrl(uniqueFileName)
+
+      console.log('🔗 URL publique:', publicUrl)
 
       // Enregistrer les métadonnées dans la table audio_files
       const { data: fileRecord, error: dbError } = await this.supabase
@@ -255,13 +268,22 @@ class SupabaseService {
           file_path: publicUrl,
           file_size: blob.size,
           mime_type: mimeType,
+          uploaded_at: new Date().toISOString()
         })
         .select()
         .single()
 
-      if (dbError) throw dbError
+      if (dbError) {
+        console.error('❌ Erreur insertion base de données:', dbError)
+        // Essayer de supprimer le fichier du storage en cas d'échec
+        await this.supabase.storage
+          .from('audio-recordings')
+          .remove([uniqueFileName])
+          .catch(console.error)
+        throw dbError
+      }
 
-      console.log('✅ Fichier audio uploadé avec succès')
+      console.log('✅ Fichier audio uploadé avec succès et enregistré en base:', fileRecord)
       return fileRecord
       
     } catch (error) {
@@ -358,6 +380,55 @@ class SupabaseService {
       return !error
     } catch (error) {
       console.error('❌ Erreur test connexion Supabase:', error)
+      return false
+    }
+  }
+
+  /**
+   * Vérifier et corriger le type d'utilisateur
+   */
+  async checkAndFixUserRole(userId: string, expectedRole: 'entendant' | 'sourd'): Promise<boolean> {
+    try {
+      if (!this.currentUser) {
+        throw new Error('Utilisateur non connecté')
+      }
+
+      // Récupérer le profil utilisateur actuel
+      const { data: currentProfile, error: fetchError } = await this.supabase
+        .from('users')
+        .select('user_role')
+        .eq('id', userId)
+        .single()
+
+      if (fetchError) {
+        console.error('❌ Erreur récupération profil:', fetchError)
+        return false
+      }
+
+      // Si le rôle ne correspond pas, le corriger
+      if (currentProfile.user_role !== expectedRole) {
+        console.log(`🔄 Correction du rôle utilisateur: ${currentProfile.user_role} → ${expectedRole}`)
+        
+        const { error: updateError } = await this.supabase
+          .from('users')
+          .update({ 
+            user_role: expectedRole,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId)
+
+        if (updateError) {
+          console.error('❌ Erreur mise à jour rôle:', updateError)
+          return false
+        }
+
+        console.log('✅ Rôle utilisateur corrigé avec succès')
+        return true
+      }
+
+      return true
+    } catch (error) {
+      console.error('❌ Erreur vérification rôle:', error)
       return false
     }
   }
