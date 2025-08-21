@@ -16,7 +16,7 @@ import Animated, {
 } from "react-native-reanimated"
 import { useAuth } from "../context/AuthContext"
 import { useNavigation } from "@react-navigation/native"
-import * as Haptics from "expo-haptics"
+import { impactAsync } from "../utils/platformUtils"
 
 const { width } = Dimensions.get("window")
 
@@ -62,7 +62,7 @@ const HomeScreen: React.FC = () => {
   }, [])
 
   const handleModulePress = (moduleName: string, screenName: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    impactAsync()
     
     // Navigation conditionnelle selon le module
     switch (moduleName) {

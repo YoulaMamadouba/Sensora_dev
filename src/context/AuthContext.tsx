@@ -126,6 +126,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (result?.user) {
           console.log('✅ Utilisateur inscrit avec succès, mise à jour du contexte local')
           
+          // Diagnostiquer le rôle utilisateur
+          const diagnosis = await supabaseService.diagnoseUserRole(result.user.id)
+          if (!diagnosis.success) {
+            console.warn('⚠️ Problèmes détectés avec le rôle utilisateur:', diagnosis.issues)
+            
+            // Tenter de corriger les problèmes
+            const roleCorrected = await supabaseService.checkAndFixUserRole(result.user.id, userRole)
+            if (!roleCorrected) {
+              console.warn('⚠️ Échec de la correction automatique du rôle, tentative de force mise à jour')
+              const forceUpdated = await supabaseService.forceUpdateUserRole(result.user.id, userRole)
+              if (!forceUpdated) {
+                console.error('❌ Impossible de corriger le rôle utilisateur')
+                // Continuer quand même, car l'utilisateur est inscrit
+              }
+            }
+          } else {
+            console.log('✅ Diagnostic du rôle utilisateur réussi')
+          }
+          
           // Mettre à jour l'utilisateur dans le contexte
           const mappedUser: User = {
             id: result.user.id,

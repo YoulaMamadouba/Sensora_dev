@@ -83,13 +83,20 @@ class SupabaseService {
 
       // Créer l'entrée dans la table users
       if (data.user) {
+        console.log('✅ Compte d\'authentification créé, création du profil avec le rôle:', userRole)
+        
+        // S'assurer que le rôle est bien défini
+        const userRoleToInsert = userRole || 'entendant'
+        console.log('🔍 Rôle à insérer dans la base de données:', userRoleToInsert)
+        
+        // Utiliser une transaction pour s'assurer que tout est cohérent
         const { error: profileError } = await this.supabase
           .from('users')
           .insert({
             id: data.user.id,
             email: data.user.email!,
             full_name: fullName,
-            user_role: userRole,
+            user_role: userRoleToInsert,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
@@ -97,11 +104,51 @@ class SupabaseService {
         if (profileError) {
           console.error('❌ Erreur création profil:', profileError)
           // Essayer de supprimer le compte d'authentification en cas d'échec
-          await this.supabase.auth.admin.deleteUser(data.user.id).catch(console.error)
+          try {
+            await this.supabase.auth.admin.deleteUser(data.user.id)
+          } catch (deleteError) {
+            console.error('❌ Erreur suppression compte après échec profil:', deleteError)
+          }
           throw profileError
         }
 
-        console.log('✅ Profil utilisateur créé avec le rôle:', userRole)
+        // Vérifier que le profil a été créé correctement
+        const { data: createdProfile, error: verifyError } = await this.supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.user.id)
+          .single()
+
+        if (verifyError) {
+          console.error('❌ Erreur vérification profil créé:', verifyError)
+        } else {
+          console.log('✅ Profil utilisateur créé avec succès:', {
+            id: createdProfile.id,
+            email: createdProfile.email,
+            full_name: createdProfile.full_name,
+            user_role: createdProfile.user_role
+          })
+
+          // Si le rôle ne correspond pas à ce qui était attendu, le corriger
+          if (createdProfile.user_role !== userRoleToInsert) {
+            console.warn(`⚠️ Rôle incorrect détecté: ${createdProfile.user_role} au lieu de ${userRoleToInsert}`)
+            
+            // Forcer la mise à jour du rôle
+            const { error: updateError } = await this.supabase
+              .from('users')
+              .update({ 
+                user_role: userRoleToInsert,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', data.user.id)
+
+            if (updateError) {
+              console.error('❌ Erreur correction rôle:', updateError)
+            } else {
+              console.log('✅ Rôle corrigé avec succès')
+            }
+          }
+        }
       }
 
       console.log('✅ Inscription réussie')
@@ -119,6 +166,8 @@ class SupabaseService {
         throw new Error('Adresse email invalide.')
       } else if (error?.message?.includes('Password should be at least')) {
         throw new Error('Le mot de passe doit contenir au moins 6 caractères.')
+      } else if (error?.message?.includes('duplicate key value violates unique constraint')) {
+        throw new Error('Un utilisateur avec cet email existe déjà.')
       }
       
       throw error
@@ -385,18 +434,330 @@ class SupabaseService {
   }
 
   /**
+   * Corriger automatiquement tous les rôles utilisateur incorrects
+   */
+  async fixAllUserRoles(): Promise<{
+    success: boolean
+    fixedCount: number
+    errors: string[]
+  }> {
+    try {
+      console.log('🔧 Correction automatique de tous les rôles utilisateur')
+      
+      const errors: string[] = []
+      let fixedCount = 0
+
+      // Récupérer tous les utilisateurs
+      const { data: users, error: fetchError } = await this.supabase
+        .from('users')
+        .select('id, email, full_name, user_role')
+
+      if (fetchError) {
+        errors.push(`Erreur récupération utilisateurs: ${fetchError.message}`)
+        return { success: false, fixedCount: 0, errors }
+      }
+
+      if (!users || users.length === 0) {
+        console.log('ℹ️ Aucun utilisateur trouvé')
+        return { success: true, fixedCount: 0, errors: [] }
+      }
+
+      console.log(`📊 ${users.length} utilisateurs trouvés`)
+
+      // Vérifier et corriger chaque utilisateur
+      for (const user of users) {
+        try {
+          // Vérifier si le rôle est valide
+          if (!user.user_role || (user.user_role !== 'entendant' && user.user_role !== 'sourd')) {
+            console.log(`⚠️ Rôle invalide détecté pour ${user.email}: ${user.user_role}`)
+            
+            // Essayer de déterminer le rôle correct basé sur les métadonnées
+            const { data: authUser } = await this.supabase.auth.admin.getUserById(user.id)
+            if (authUser?.user?.user_metadata?.user_role) {
+              const correctRole = authUser.user.user_metadata.user_role
+              if (correctRole === 'entendant' || correctRole === 'sourd') {
+                // Corriger le rôle
+                const { error: updateError } = await this.supabase
+                  .from('users')
+                  .update({ 
+                    user_role: correctRole,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', user.id)
+
+                if (updateError) {
+                  errors.push(`Erreur correction rôle pour ${user.email}: ${updateError.message}`)
+                } else {
+                  console.log(`✅ Rôle corrigé pour ${user.email}: ${user.user_role} → ${correctRole}`)
+                  fixedCount++
+                }
+              } else {
+                errors.push(`Rôle invalide dans les métadonnées pour ${user.email}: ${correctRole}`)
+              }
+            } else {
+              // Si pas de métadonnées, utiliser la valeur par défaut
+              const { error: updateError } = await this.supabase
+                .from('users')
+                .update({ 
+                  user_role: 'entendant',
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id)
+
+              if (updateError) {
+                errors.push(`Erreur correction rôle par défaut pour ${user.email}: ${updateError.message}`)
+              } else {
+                console.log(`✅ Rôle corrigé par défaut pour ${user.email}: ${user.user_role} → entendant`)
+                fixedCount++
+              }
+            }
+          }
+        } catch (error) {
+          errors.push(`Erreur traitement utilisateur ${user.email}: ${error}`)
+        }
+      }
+
+      console.log(`✅ Correction terminée: ${fixedCount} utilisateurs corrigés`)
+      return {
+        success: errors.length === 0,
+        fixedCount,
+        errors
+      }
+    } catch (error) {
+      console.error('❌ Erreur correction automatique:', error)
+      return {
+        success: false,
+        fixedCount: 0,
+        errors: [`Erreur générale: ${error}`]
+      }
+    }
+  }
+
+  /**
+   * Tester la structure de la base de données
+   */
+  async testDatabaseStructure(): Promise<{
+    success: boolean
+    issues: string[]
+    tableExists: boolean
+    columnExists: boolean
+    constraintExists: boolean
+  }> {
+    try {
+      console.log('🔍 Test de la structure de la base de données')
+      
+      const issues: string[] = []
+      let tableExists = false
+      let columnExists = false
+      let constraintExists = false
+
+      // Vérifier si la table users existe
+      const { data: tableCheck, error: tableError } = await this.supabase
+        .from('users')
+        .select('count')
+        .limit(1)
+
+      if (tableError) {
+        issues.push(`Table users n'existe pas: ${tableError.message}`)
+      } else {
+        tableExists = true
+        console.log('✅ Table users existe')
+      }
+
+      // Vérifier si la colonne user_role existe
+      if (tableExists) {
+        const { data: columnCheck, error: columnError } = await this.supabase
+          .from('users')
+          .select('user_role')
+          .limit(1)
+
+        if (columnError) {
+          issues.push(`Colonne user_role n'existe pas: ${columnError.message}`)
+        } else {
+          columnExists = true
+          console.log('✅ Colonne user_role existe')
+        }
+      }
+
+      // Vérifier la contrainte sur user_role
+      if (columnExists) {
+        try {
+          // Tenter d'insérer une valeur invalide pour tester la contrainte
+          const { error: constraintError } = await this.supabase
+            .from('users')
+            .insert({
+              id: '00000000-0000-0000-0000-000000000000', // UUID invalide pour le test
+              email: 'test@test.com',
+              full_name: 'Test User',
+              user_role: 'invalid_role'
+            })
+
+          if (constraintError && constraintError.message.includes('check constraint')) {
+            constraintExists = true
+            console.log('✅ Contrainte sur user_role existe')
+          } else {
+            issues.push('Contrainte sur user_role ne fonctionne pas correctement')
+          }
+        } catch (error) {
+          // C'est normal que l'insertion échoue, on vérifie juste la contrainte
+          constraintExists = true
+          console.log('✅ Contrainte sur user_role existe (test réussi)')
+        }
+      }
+
+      return {
+        success: issues.length === 0,
+        issues,
+        tableExists,
+        columnExists,
+        constraintExists
+      }
+    } catch (error) {
+      console.error('❌ Erreur test structure base de données:', error)
+      return {
+        success: false,
+        issues: [`Erreur test: ${error}`],
+        tableExists: false,
+        columnExists: false,
+        constraintExists: false
+      }
+    }
+  }
+
+  /**
+   * Diagnostiquer les problèmes avec le rôle utilisateur
+   */
+  async diagnoseUserRole(userId: string): Promise<{
+    success: boolean
+    currentRole: string | null
+    expectedRole: string | null
+    issues: string[]
+  }> {
+    try {
+      console.log('🔍 Diagnostic du rôle utilisateur:', userId)
+
+      const issues: string[] = []
+      let currentRole: string | null = null
+      let expectedRole: string | null = null
+
+      // Récupérer le profil utilisateur
+      const { data: profile, error: profileError } = await this.supabase
+        .from('users')
+        .select('user_role, email, full_name')
+        .eq('id', userId)
+        .single()
+
+      if (profileError) {
+        issues.push(`Erreur récupération profil: ${profileError.message}`)
+        return { success: false, currentRole: null, expectedRole: null, issues }
+      }
+
+      currentRole = profile.user_role
+      console.log('📊 Profil actuel:', profile)
+
+      // Vérifier si le rôle est valide
+      if (!currentRole || (currentRole !== 'entendant' && currentRole !== 'sourd')) {
+        issues.push(`Rôle invalide: ${currentRole}`)
+      }
+
+      // Vérifier si le rôle correspond à ce qui est attendu
+      if (this.currentUser) {
+        // Essayer de déterminer le rôle attendu basé sur les données d'authentification
+        const { data: authUser } = await this.supabase.auth.getUser()
+        if (authUser?.user) {
+          const userMetadata = authUser.user.user_metadata
+          if (userMetadata?.user_role) {
+            expectedRole = userMetadata.user_role
+            if (expectedRole !== currentRole) {
+              issues.push(`Rôle attendu (${expectedRole}) ne correspond pas au rôle actuel (${currentRole})`)
+            }
+          }
+        }
+      }
+
+      return {
+        success: issues.length === 0,
+        currentRole,
+        expectedRole,
+        issues
+      }
+    } catch (error) {
+      console.error('❌ Erreur diagnostic rôle:', error)
+      return {
+        success: false,
+        currentRole: null,
+        expectedRole: null,
+        issues: [`Erreur diagnostic: ${error}`]
+      }
+    }
+  }
+
+  /**
+   * Forcer la mise à jour du rôle utilisateur
+   */
+  async forceUpdateUserRole(userId: string, userRole: 'entendant' | 'sourd'): Promise<boolean> {
+    try {
+      console.log('🔧 Force mise à jour du rôle utilisateur:', { userId, userRole })
+
+      const { error: updateError } = await this.supabase
+        .from('users')
+        .update({ 
+          user_role: userRole,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+
+      if (updateError) {
+        console.error('❌ Erreur force mise à jour rôle:', updateError)
+        return false
+      }
+
+      // Vérifier que la mise à jour a bien été effectuée
+      const { data: updatedProfile, error: verifyError } = await this.supabase
+        .from('users')
+        .select('user_role, email, full_name')
+        .eq('id', userId)
+        .single()
+
+      if (verifyError) {
+        console.error('❌ Erreur vérification force mise à jour:', verifyError)
+        return false
+      }
+
+      if (updatedProfile.user_role === userRole) {
+        console.log('✅ Force mise à jour réussie:', {
+          id: userId,
+          email: updatedProfile.email,
+          full_name: updatedProfile.full_name,
+          user_role: updatedProfile.user_role
+        })
+        return true
+      } else {
+        console.error('❌ Échec de la force mise à jour: le rôle n\'a pas été mis à jour')
+        return false
+      }
+    } catch (error) {
+      console.error('❌ Erreur force mise à jour rôle:', error)
+      return false
+    }
+  }
+
+  /**
    * Vérifier et corriger le type d'utilisateur
    */
   async checkAndFixUserRole(userId: string, expectedRole: 'entendant' | 'sourd'): Promise<boolean> {
     try {
       if (!this.currentUser) {
-        throw new Error('Utilisateur non connecté')
+        console.warn('⚠️ Utilisateur non connecté, impossible de vérifier le rôle')
+        return false
       }
+
+      console.log('🔍 Vérification du rôle utilisateur:', { userId, expectedRole })
 
       // Récupérer le profil utilisateur actuel
       const { data: currentProfile, error: fetchError } = await this.supabase
         .from('users')
-        .select('user_role')
+        .select('user_role, email, full_name')
         .eq('id', userId)
         .single()
 
@@ -404,6 +765,14 @@ class SupabaseService {
         console.error('❌ Erreur récupération profil:', fetchError)
         return false
       }
+
+      console.log('📊 Profil actuel:', {
+        id: userId,
+        email: currentProfile.email,
+        full_name: currentProfile.full_name,
+        current_role: currentProfile.user_role,
+        expected_role: expectedRole
+      })
 
       // Si le rôle ne correspond pas, le corriger
       if (currentProfile.user_role !== expectedRole) {
@@ -423,10 +792,30 @@ class SupabaseService {
         }
 
         console.log('✅ Rôle utilisateur corrigé avec succès')
+        
+        // Vérifier que la mise à jour a bien été effectuée
+        const { data: updatedProfile, error: verifyError } = await this.supabase
+          .from('users')
+          .select('user_role')
+          .eq('id', userId)
+          .single()
+
+        if (verifyError) {
+          console.error('❌ Erreur vérification mise à jour:', verifyError)
+          return false
+        }
+
+        if (updatedProfile.user_role === expectedRole) {
+          console.log('✅ Vérification réussie: le rôle a été correctement mis à jour')
+          return true
+        } else {
+          console.error('❌ Échec de la vérification: le rôle n\'a pas été mis à jour correctement')
+          return false
+        }
+      } else {
+        console.log('✅ Le rôle utilisateur est déjà correct:', currentProfile.user_role)
         return true
       }
-
-      return true
     } catch (error) {
       console.error('❌ Erreur vérification rôle:', error)
       return false

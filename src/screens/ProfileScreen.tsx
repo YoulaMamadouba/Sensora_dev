@@ -6,7 +6,7 @@ import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
 import { useAuth } from "../context/AuthContext"
 import { useNavigation } from "@react-navigation/native"
-import * as Haptics from "expo-haptics"
+import { impactAsync } from "../utils/platformUtils"
 
 const ProfileScreen: React.FC = () => {
   const { user, logout, userType } = useAuth()
@@ -19,7 +19,7 @@ const ProfileScreen: React.FC = () => {
         text: "Déconnexion",
         style: "destructive",
         onPress: () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+          impactAsync()
           logout()
           navigation.navigate("Intro" as never)
         },
@@ -132,7 +132,7 @@ const ProfileScreen: React.FC = () => {
             <TouchableOpacity
               key={item.id}
               style={styles.menuItem}
-              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              onPress={() => impactAsync()}
               activeOpacity={0.8}
             >
               <LinearGradient colors={["rgba(20, 100, 84, 0.08)", "rgba(2, 158, 214, 0.04)"]} style={styles.menuItemGradient}>

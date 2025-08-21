@@ -2,22 +2,22 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, StatusBar, TextInput } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, TextInput, Alert } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withSpring,
   withRepeat,
   withSequence,
-  withSpring,
   withDelay,
   interpolate,
   Extrapolate,
   runOnJS,
 } from "react-native-reanimated"
-import * as Haptics from "expo-haptics"
+import { impactAsync } from "../../utils/platformUtils"
 import { useNavigation } from "@react-navigation/native"
 
 const { width, height } = Dimensions.get("window")
@@ -92,7 +92,7 @@ const TranslationScreen: React.FC = () => {
   }, [])
 
   const handleLanguageSelect = (language: Language) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    impactAsync(Haptics.ImpactFeedbackStyle.Light)
     setSelectedLanguage(language)
     setFavoriteLanguage(language.id)
     
@@ -105,7 +105,7 @@ const TranslationScreen: React.FC = () => {
   const handleTranslate = async () => {
     if (!inputText.trim() || !selectedLanguage) return
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     setIsTranslating(true)
     translateScale.value = withRepeat(
       withSequence(
@@ -152,7 +152,7 @@ const TranslationScreen: React.FC = () => {
   const handlePlayAudio = () => {
     if (!translatedText) return
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    impactAsync(Haptics.ImpactFeedbackStyle.Light)
     setIsPlaying(true)
 
     // Simulation de lecture audio
@@ -162,7 +162,7 @@ const TranslationScreen: React.FC = () => {
   }
 
   const handleVoiceInput = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     setInputMode("voice")
     voiceScale.value = withRepeat(
       withSequence(
@@ -182,7 +182,7 @@ const TranslationScreen: React.FC = () => {
   }
 
   const handleBackPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    impactAsync(Haptics.ImpactFeedbackStyle.Light)
     navigation.goBack()
   }
 

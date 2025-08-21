@@ -1,29 +1,39 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, StatusBar, Alert } from "react-native"
+import { useState, useEffect, useRef } from "react"
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  Alert,
+  Platform,
+  ScrollView,
+  StatusBar,
+} from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withSpring,
   withRepeat,
   withSequence,
-  withSpring,
   withDelay,
   interpolate,
   Extrapolate,
   runOnJS,
 } from "react-native-reanimated"
-import * as Haptics from "expo-haptics"
-import { useNavigation } from "@react-navigation/native"
-import { Audio } from 'expo-av'
-import * as FileSystem from 'expo-file-system'
+import { Audio } from "expo-av"
+import * as FileSystem from "expo-file-system"
 import { useAuth } from "../../context/AuthContext"
 import { useSupabaseAuth } from "../../context/SupabaseAuthContext"
 import OpenAIService from "../../services/OpenAIService"
+import { impactAsync } from "../../utils/platformUtils"
+import { useNavigation } from "@react-navigation/native"
 
 const { width, height } = Dimensions.get("window")
 
@@ -43,6 +53,7 @@ const VoiceToSignModule: React.FC = () => {
   const [signEmojis, setSignEmojis] = useState("")
   const [signTranslation, setSignTranslation] = useState("")
   const [isTranscribing, setIsTranscribing] = useState(false)
+  const [openAINotification, setOpenAINotification] = useState<string | null>(null)
 
   // Animations values
   const micScale = useSharedValue(1)
@@ -89,42 +100,17 @@ const VoiceToSignModule: React.FC = () => {
       waveOpacity.value = withTiming(1, { duration: 300 })
       waveScale.value = withRepeat(
         withSequence(
-          withTiming(1, { duration: 600 }),
-          withTiming(1.2, { duration: 600 })
-        ),
-        -1,
-        true,
-      )
-      
-      // Animation de pulsation
-      pulseScale.value = withRepeat(
-        withSequence(
-          withSpring(1.1, { damping: 10 }),
-          withSpring(1, { damping: 15 })
+          withSpring(1.2, { damping: 8 }),
+          withSpring(0.8, { damping: 12 })
         ),
         -1,
         false,
       )
-
-      // Animation du glow
-      glowOpacity.value = withRepeat(
-        withSequence(
-          withTiming(0.8, { duration: 800 }),
-          withTiming(0.3, { duration: 800 })
-        ),
-        -1,
-        true,
-      )
-
-      // Simulation de progression
-      progressValue.value = withTiming(1, { duration: 3000 })
     } else {
+      // Arrêter les animations
       micScale.value = withSpring(1, { damping: 15 })
-      waveOpacity.value = withTiming(0, { duration: 200 })
-      waveScale.value = withTiming(0, { duration: 200 })
-      pulseScale.value = withSpring(1, { damping: 15 })
-      glowOpacity.value = withTiming(0, { duration: 200 })
-      progressValue.value = withTiming(0, { duration: 200 })
+      waveOpacity.value = withTiming(0, { duration: 300 })
+      waveScale.value = withSpring(0, { damping: 15 })
     }
   }, [isRecording])
 
@@ -203,6 +189,22 @@ const VoiceToSignModule: React.FC = () => {
                   
                 } catch (translationError) {
                   console.error('❌ Erreur traduction LSF:', translationError)
+                  
+                  // Gestion spécifique des erreurs OpenAI pour la traduction
+                  let errorMessage = 'Erreur de traduction'
+                  if (translationError instanceof Error) {
+                    if (translationError.message.includes('quota')) {
+                      errorMessage = 'Quota OpenAI dépassé. Utilisation de la traduction simulée.'
+                    } else if (translationError.message.includes('Clé API')) {
+                      errorMessage = 'Configuration OpenAI manquante. Utilisation de la traduction simulée.'
+                    } else {
+                      errorMessage = 'Erreur de traduction. Utilisation de la traduction simulée.'
+                    }
+                  }
+                  
+                  // Afficher une notification informatif à l'utilisateur
+                  showOpenAINotification(errorMessage)
+                  
                   // Fallback vers la génération locale d'emojis
                   const localEmojis = generateSignEmojis(transcription.text)
                   setSignEmojis(localEmojis)
@@ -215,6 +217,22 @@ const VoiceToSignModule: React.FC = () => {
               
             } catch (transcriptionError) {
               console.error('❌ Erreur transcription OpenAI:', transcriptionError)
+              
+              // Gestion spécifique des erreurs OpenAI
+              let errorMessage = 'Erreur de transcription'
+              if (transcriptionError instanceof Error) {
+                if (transcriptionError.message.includes('quota')) {
+                  errorMessage = 'Quota OpenAI dépassé. Utilisation de la transcription simulée.'
+                } else if (transcriptionError.message.includes('Clé API')) {
+                  errorMessage = 'Configuration OpenAI manquante. Utilisation de la transcription simulée.'
+                } else {
+                  errorMessage = 'Erreur de transcription. Utilisation de la transcription simulée.'
+                }
+              }
+              
+              // Afficher une notification informatif à l'utilisateur
+              showOpenAINotification(errorMessage)
+              
               // Fallback vers la transcription simulée
               const mockTranscription = "Bonjour, comment allez-vous aujourd'hui ?"
               setTranscribedText(mockTranscription)
@@ -242,7 +260,7 @@ const VoiceToSignModule: React.FC = () => {
           setSignEmojis(localEmojis)
           setSignTranslation('Traduction LSF non disponible')
         }
-        
+          
         // Animation de l'avatar
         avatarRotation.value = withSequence(
           withSpring(8, { damping: 8 }),
@@ -263,7 +281,7 @@ const VoiceToSignModule: React.FC = () => {
     try {
       if (!supabaseService || !user) {
         console.warn('⚠️ Service Supabase ou utilisateur non disponible')
-        return
+        return null
       }
 
       console.log('📤 Upload du fichier audio vers Supabase...')
@@ -277,7 +295,7 @@ const VoiceToSignModule: React.FC = () => {
       
       if (audioFile) {
         console.log('✅ Fichier audio uploadé avec succès:', audioFile.id)
-        return audioFile // Return the audioFile object for further use
+        return audioFile
       } else {
         console.error('❌ Échec de l\'upload du fichier audio')
         return null
@@ -287,6 +305,14 @@ const VoiceToSignModule: React.FC = () => {
       Alert.alert('Erreur', 'Impossible d\'uploader le fichier audio')
       return null
     }
+  }
+
+  const showOpenAINotification = (message: string) => {
+    setOpenAINotification(message)
+    // Effacer la notification après 5 secondes
+    setTimeout(() => {
+      setOpenAINotification(null)
+    }, 5000)
   }
 
   const generateSignEmojis = (text: string) => {
@@ -343,7 +369,7 @@ const VoiceToSignModule: React.FC = () => {
   }
 
   const handleRecordToggle = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    impactAsync()
 
     if (!isRecording) {
       await startRecording()
@@ -353,7 +379,7 @@ const VoiceToSignModule: React.FC = () => {
   }
 
   const handleBackPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    impactAsync()
     navigation.goBack()
   }
 
@@ -421,6 +447,19 @@ const VoiceToSignModule: React.FC = () => {
           <Text style={styles.subtitle}>Parlez et voyez la traduction en signes en temps réel</Text>
         </View>
       </Animated.View>
+
+      {/* Notification OpenAI */}
+      {openAINotification && (
+        <Animated.View style={styles.openAINotification}>
+          <LinearGradient
+            colors={["rgba(255, 193, 7, 0.9)", "rgba(255, 152, 0, 0.9)"]}
+            style={styles.notificationGradient}
+          >
+            <Ionicons name="information-circle" size={20} color="#FFFFFF" />
+            <Text style={styles.notificationText}>{openAINotification}</Text>
+          </LinearGradient>
+        </Animated.View>
+      )}
 
       <ScrollView 
         showsVerticalScrollIndicator={false} 
@@ -512,11 +551,11 @@ const VoiceToSignModule: React.FC = () => {
                     key={index}
                     style={[
                       styles.wave,
-                                              {
-                          height: 15 + index * 8,
-                          backgroundColor: "#146454",
-                          opacity: interpolate(waveOpacity.value, [0, 1], [0.3, 1]),
-                        },
+                      {
+                        height: 15 + index * 8,
+                        backgroundColor: "#146454",
+                        opacity: interpolate(waveOpacity.value, [0, 1], [0.3, 1]),
+                      },
                     ]}
                   />
                 ))}
@@ -949,6 +988,35 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     textAlign: "center",
     fontWeight: "500",
+  },
+  openAINotification: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    zIndex: 1000,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  notificationGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  notificationText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 8,
   },
 })
 

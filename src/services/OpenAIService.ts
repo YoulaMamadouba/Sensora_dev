@@ -48,7 +48,7 @@ class OpenAIService {
       
       // Créer un FormData pour l'upload
       const formData = new FormData()
-      formData.append('file', audioBlob, 'audio.m4a')
+      formData.append('file', audioBlob)
       formData.append('model', 'whisper-1')
       formData.append('language', language)
       formData.append('response_format', 'json')
@@ -63,7 +63,18 @@ class OpenAIService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(`Erreur OpenAI: ${errorData.error?.message || response.statusText}`)
+        const errorMessage = errorData.error?.message || response.statusText
+        
+        // Gestion spécifique des erreurs de quota
+        if (response.status === 429 || errorMessage.includes('quota')) {
+          throw new Error('Quota OpenAI dépassé. Utilisation de la transcription simulée.')
+        } else if (response.status === 401) {
+          throw new Error('Clé API OpenAI invalide.')
+        } else if (response.status === 403) {
+          throw new Error('Accès refusé à l\'API OpenAI.')
+        } else {
+          throw new Error(`Erreur OpenAI: ${errorMessage}`)
+        }
       }
 
       const data = await response.json()
@@ -98,7 +109,7 @@ class OpenAIService {
       
       Texte: "${text}"
       
-      Description des signes en LSF:`
+      Traduction LSF:`
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
@@ -111,21 +122,32 @@ class OpenAIService {
           messages: [
             {
               role: 'system',
-              content: 'Tu es un expert en langue des signes française (LSF). Tu traduis du texte français en descriptions de signes LSF.'
+              content: 'Tu es un expert en langue des signes française. Tu traduis le texte français en descriptions de signes LSF.'
             },
             {
               role: 'user',
               content: prompt
             }
           ],
-          max_tokens: 500,
-          temperature: 0.3,
+          max_tokens: 200,
+          temperature: 0.7,
         }),
       })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(`Erreur OpenAI: ${errorData.error?.message || response.statusText}`)
+        const errorMessage = errorData.error?.message || response.statusText
+        
+        // Gestion spécifique des erreurs de quota
+        if (response.status === 429 || errorMessage.includes('quota')) {
+          throw new Error('Quota OpenAI dépassé. Utilisation de la traduction simulée.')
+        } else if (response.status === 401) {
+          throw new Error('Clé API OpenAI invalide.')
+        } else if (response.status === 403) {
+          throw new Error('Accès refusé à l\'API OpenAI.')
+        } else {
+          throw new Error(`Erreur OpenAI: ${errorMessage}`)
+        }
       }
 
       const data = await response.json()
@@ -134,7 +156,7 @@ class OpenAIService {
       console.log('✅ Traduction LSF réussie:', translation)
 
       return {
-        text: translation,
+        text: translation.trim(),
         sourceLanguage: 'fr',
         targetLanguage: targetLanguage
       }
@@ -189,7 +211,18 @@ class OpenAIService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(`Erreur OpenAI: ${errorData.error?.message || response.statusText}`)
+        const errorMessage = errorData.error?.message || response.statusText
+        
+        // Gestion spécifique des erreurs de quota
+        if (response.status === 429 || errorMessage.includes('quota')) {
+          throw new Error('Quota OpenAI dépassé. Utilisation de la génération simulée.')
+        } else if (response.status === 401) {
+          throw new Error('Clé API OpenAI invalide.')
+        } else if (response.status === 403) {
+          throw new Error('Accès refusé à l\'API OpenAI.')
+        } else {
+          throw new Error(`Erreur OpenAI: ${errorMessage}`)
+        }
       }
 
       const data = await response.json()

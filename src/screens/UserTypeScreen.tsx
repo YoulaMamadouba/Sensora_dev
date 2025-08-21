@@ -1,20 +1,22 @@
 "use client"
 
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image } from "react-native"
+import type React from "react"
+import { useState, useEffect } from "react"
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
+  withSpring,
+  withDelay,
   runOnJS,
   withSequence,
-  withDelay,
 } from "react-native-reanimated"
 import { useNavigation } from "@react-navigation/native"
 import { useAuth } from "../context/AuthContext"
-import * as Haptics from "expo-haptics"
+import { impactAsync } from "../utils/platformUtils"
 
 const { width, height } = Dimensions.get("window")
 
@@ -36,7 +38,7 @@ const UserTypeScreen = () => {
   cardsOpacity.value = withDelay(400, withTiming(1, { duration: 1000 }))
 
   const handleUserTypeSelection = (type: "hearing" | "deaf") => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    impactAsync()
     setUserType(type)
 
     // Animation de sélection

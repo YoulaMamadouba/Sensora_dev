@@ -6,7 +6,34 @@ export const isWeb = Platform.OS === 'web';
 
 export const impactAsync = async (style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Medium) => {
   if (!isWeb) {
-    await Haptics.impactAsync(style);
+    try {
+      await Haptics.impactAsync(style);
+    } catch (error) {
+      // Silently fail on haptics errors
+      console.warn('Haptics not available:', error);
+    }
+  }
+};
+
+export const notificationAsync = async (type: Haptics.NotificationFeedbackType) => {
+  if (!isWeb) {
+    try {
+      await Haptics.notificationAsync(type);
+    } catch (error) {
+      // Silently fail on haptics errors
+      console.warn('Haptics notification not available:', error);
+    }
+  }
+};
+
+export const selectionAsync = async () => {
+  if (!isWeb) {
+    try {
+      await Haptics.selectionAsync();
+    } catch (error) {
+      // Silently fail on haptics errors
+      console.warn('Haptics selection not available:', error);
+    }
   }
 };
 

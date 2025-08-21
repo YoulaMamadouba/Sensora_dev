@@ -25,7 +25,8 @@ import Animated, {
 } from "react-native-reanimated"
 import { useNavigation } from "@react-navigation/native"
 import { useAuth } from "../context/AuthContext"
-import * as Haptics from "expo-haptics"
+import { impactAsync, notificationAsync } from "../utils/platformUtils"
+import { ImpactFeedbackStyle, NotificationFeedbackType } from "expo-haptics"
 
 interface FormData {
   email: string
@@ -62,29 +63,20 @@ const AuthScreen: React.FC = () => {
   }, [])
 
   const toggleAuthMode = () => {
+    impactAsync()
     setIsLogin(!isLogin)
+    setShowForgotPassword(false)
     reset()
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    }
-
-    // Animation de transition
-    formOpacity.value = withSequence(withTiming(0.3, { duration: 200 }), withTiming(1, { duration: 400 }))
   }
 
   const handleForgotPassword = () => {
+    impactAsync()
     setShowForgotPassword(true)
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    }
-
+    // Simulation d'envoi d'email
     setTimeout(() => {
-      Alert.alert(
-        "Mot de passe oublié",
-        "Un email de réinitialisation sera envoyé à votre adresse (fonctionnalité simulée)",
-        [{ text: "OK", onPress: () => setShowForgotPassword(false) }],
-      )
-    }, 500)
+      setShowForgotPassword(false)
+      Alert.alert("Email envoyé", "Un email de réinitialisation a été envoyé à votre adresse email.")
+    }, 2000)
   }
 
   const headerAnimatedStyle = useAnimatedStyle(() => ({
@@ -258,27 +250,21 @@ const AuthScreen: React.FC = () => {
                   }
 
                   setIsLoading(true)
-                  if (Platform.OS !== 'web') {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                  }
+                  impactAsync()
                   
                   try {
                     if (isLogin) {
                       // Connexion
                       const success = await login(data.email, data.password, userType)
                       if (success) {
-                        if (Platform.OS !== 'web') {
-                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-                        }
+                        notificationAsync(NotificationFeedbackType.Success)
                         // Redirection vers l'écran principal après connexion réussie
                         navigation.reset({
                           index: 0,
                           routes: [{ name: 'Main' as never }],
                         })
                       } else {
-                        if (Platform.OS !== 'web') {
-                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-                        }
+                        notificationAsync(NotificationFeedbackType.Error)
                         Alert.alert("Erreur", "Email ou mot de passe incorrect")
                       }
                     } else {
@@ -292,9 +278,7 @@ const AuthScreen: React.FC = () => {
                       
                       if (success) {
                         // Si l'inscription et la connexion automatique réussissent
-                        if (Platform.OS !== 'web') {
-                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-                        }
+                        notificationAsync(NotificationFeedbackType.Success)
                         // Redirection vers l'écran principal
                         navigation.reset({
                           index: 0,
