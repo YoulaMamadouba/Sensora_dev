@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, Animated, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, StyleSheet, Text, Dimensions } from 'react-native';
+import { GLView } from 'expo-gl';
+import { Renderer } from 'expo-three';
+import * as THREE from 'three';
 
 const { width } = Dimensions.get('window');
 
@@ -17,340 +19,184 @@ const SignLanguageAvatar: React.FC<SignLanguageAvatarProps> = ({
   currentSign = "",
   style 
 }) => {
-  const [headRotation] = useState(new Animated.Value(0));
-  const [leftArmRotation] = useState(new Animated.Value(0));
-  const [rightArmRotation] = useState(new Animated.Value(0));
-  const [bodyRotation] = useState(new Animated.Value(0));
-  const [scale] = useState(new Animated.Value(1));
-  const [depth] = useState(new Animated.Value(0));
+  const [isWeb, setIsWeb] = useState(false);
 
   useEffect(() => {
-    if (!isSigning) {
-      // Reset animations
-      Animated.parallel([
-        Animated.timing(headRotation, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(leftArmRotation, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRotation, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bodyRotation, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scale, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(depth, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-      return;
-    }
+    // Détecter si on est sur le web
+    setIsWeb(typeof window !== 'undefined');
+  }, []);
 
-    // Animations basées sur le texte
-    let headAnim = Animated.timing(headRotation, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    });
+  const onContextCreate = async (gl: any) => {
+    // Créer le renderer Three.js
+    const renderer = new Renderer({ gl });
+    renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+    renderer.setClearColor('#00000000', 0); // Fond transparent
 
-    let leftArmAnim = Animated.timing(leftArmRotation, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    });
+    // Créer la scène
+    const scene = new THREE.Scene();
 
-    let rightArmAnim = Animated.timing(rightArmRotation, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    });
+    // Créer la caméra
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      gl.drawingBufferWidth / gl.drawingBufferHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 5;
 
-    if (signText.toLowerCase().includes('bonjour')) {
-      // Signe "bonjour" - mouvement de la main droite
-      rightArmAnim = Animated.sequence([
-        Animated.timing(rightArmRotation, {
-          toValue: 30,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRotation, {
-          toValue: -15,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRotation, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]);
-    } else if (signText.toLowerCase().includes('merci')) {
-      // Signe "merci" - mouvement des deux mains
-      leftArmAnim = Animated.sequence([
-        Animated.timing(leftArmRotation, {
-          toValue: 25,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(leftArmRotation, {
-          toValue: -10,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(leftArmRotation, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]);
-      rightArmAnim = Animated.sequence([
-        Animated.timing(rightArmRotation, {
-          toValue: -25,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRotation, {
-          toValue: 10,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRotation, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]);
-    } else if (signText.toLowerCase().includes('oui')) {
-      // Signe "oui" - mouvement de tête vertical
-      headAnim = Animated.sequence([
-        Animated.timing(headRotation, {
-          toValue: 15,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(headRotation, {
-          toValue: -15,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(headRotation, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]);
-    } else if (signText.toLowerCase().includes('non')) {
-      // Signe "non" - mouvement de tête latéral
-      headAnim = Animated.sequence([
-        Animated.timing(headRotation, {
-          toValue: 25,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(headRotation, {
-          toValue: -25,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(headRotation, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]);
-    } else {
-      // Animation générique
-      leftArmAnim = Animated.sequence([
-        Animated.timing(leftArmRotation, {
-          toValue: 20,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(leftArmRotation, {
-          toValue: -20,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(leftArmRotation, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]);
-      rightArmAnim = Animated.sequence([
-        Animated.timing(rightArmRotation, {
-          toValue: -20,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRotation, {
-          toValue: 20,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRotation, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]);
-    }
+    // Ajouter la lumière
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
 
-    // Animation de pulsation et profondeur
-    const pulseAnim = Animated.sequence([
-      Animated.timing(scale, {
-        toValue: 1.1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scale, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(10, 10, 5);
+    scene.add(directionalLight);
 
-    const depthAnim = Animated.sequence([
-      Animated.timing(depth, {
-        toValue: 10,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(depth, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]);
+    // Créer l'avatar 3D
+    const avatarGroup = new THREE.Group();
 
-    // Lancer toutes les animations
-    Animated.parallel([
-      Animated.loop(pulseAnim),
-      Animated.loop(depthAnim),
-      Animated.loop(headAnim),
-      Animated.loop(leftArmAnim),
-      Animated.loop(rightArmAnim),
-    ]).start();
-  }, [isSigning, signText]);
+    // Corps principal
+    const bodyGeometry = new THREE.BoxGeometry(1.2, 2, 0.6);
+    const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x4A90E2 });
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.position.y = -0.5;
+    avatarGroup.add(body);
 
-  const headAnimatedStyle = {
-    transform: [
-      { rotate: `${headRotation}deg` },
-      { scale: scale },
-      { translateZ: depth },
-    ],
+    // Tête
+    const headGeometry = new THREE.SphereGeometry(0.6, 16, 16);
+    const headMaterial = new THREE.MeshLambertMaterial({ color: 0xFFD700 });
+    const head = new THREE.Mesh(headGeometry, headMaterial);
+    head.position.y = 1.5;
+    avatarGroup.add(head);
+
+    // Yeux
+    const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+    const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+    
+    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    leftEye.position.set(-0.2, 1.6, 0.5);
+    avatarGroup.add(leftEye);
+    
+    const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    rightEye.position.set(0.2, 1.6, 0.5);
+    avatarGroup.add(rightEye);
+
+    // Bouche
+    const mouthGeometry = new THREE.BoxGeometry(0.3, 0.05, 0.05);
+    const mouthMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+    const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+    mouth.position.set(0, 1.3, 0.55);
+    avatarGroup.add(mouth);
+
+    // Bras gauche
+    const leftArmGeometry = new THREE.BoxGeometry(0.4, 1.2, 0.4);
+    const armMaterial = new THREE.MeshLambertMaterial({ color: 0x4A90E2 });
+    const leftArm = new THREE.Mesh(leftArmGeometry, armMaterial);
+    leftArm.position.set(-1.2, 0, 0);
+    avatarGroup.add(leftArm);
+
+    // Bras droit
+    const rightArm = new THREE.Mesh(leftArmGeometry, armMaterial);
+    rightArm.position.set(1.2, 0, 0);
+    avatarGroup.add(rightArm);
+
+    // Mains
+    const handGeometry = new THREE.SphereGeometry(0.2, 8, 8);
+    const handMaterial = new THREE.MeshLambertMaterial({ color: 0xFFE0B2 });
+    
+    const leftHand = new THREE.Mesh(handGeometry, handMaterial);
+    leftHand.position.set(-1.2, -1.2, 0);
+    avatarGroup.add(leftHand);
+    
+    const rightHand = new THREE.Mesh(handGeometry, handMaterial);
+    rightHand.position.set(1.2, -1.2, 0);
+    avatarGroup.add(rightHand);
+
+    // Jambes
+    const legGeometry = new THREE.BoxGeometry(0.4, 1.2, 0.4);
+    const legMaterial = new THREE.MeshLambertMaterial({ color: 0x4A90E2 });
+    
+    const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+    leftLeg.position.set(-0.4, -2.2, 0);
+    avatarGroup.add(leftLeg);
+    
+    const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+    rightLeg.position.set(0.4, -2.2, 0);
+    avatarGroup.add(rightLeg);
+
+    // Pieds
+    const footGeometry = new THREE.BoxGeometry(0.6, 0.2, 0.8);
+    const footMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+    
+    const leftFoot = new THREE.Mesh(footGeometry, footMaterial);
+    leftFoot.position.set(-0.4, -2.9, 0.2);
+    avatarGroup.add(leftFoot);
+    
+    const rightFoot = new THREE.Mesh(footGeometry, footMaterial);
+    rightFoot.position.set(0.4, -2.9, 0.2);
+    avatarGroup.add(rightFoot);
+
+    scene.add(avatarGroup);
+
+    // Animation
+    const animate = () => {
+      requestAnimationFrame(animate);
+
+      if (isSigning) {
+        // Animation de la tête
+        head.rotation.y = Math.sin(Date.now() * 0.002) * 0.1;
+        head.rotation.x = Math.sin(Date.now() * 0.0015) * 0.05;
+
+        // Animation des bras pour la langue des signes
+        leftArm.rotation.z = Math.sin(Date.now() * 0.003) * 0.5;
+        leftArm.rotation.x = Math.sin(Date.now() * 0.002) * 0.3;
+
+        rightArm.rotation.z = Math.sin(Date.now() * 0.003 + Math.PI) * 0.5;
+        rightArm.rotation.x = Math.sin(Date.now() * 0.002 + Math.PI) * 0.3;
+
+        // Animation du corps
+        body.rotation.y = Math.sin(Date.now() * 0.001) * 0.05;
+
+        // Animation des mains
+        leftHand.rotation.z = Math.sin(Date.now() * 0.003) * 0.3;
+        rightHand.rotation.z = Math.sin(Date.now() * 0.003 + Math.PI) * 0.3;
+      } else {
+        // Reset animations
+        head.rotation.set(0, 0, 0);
+        leftArm.rotation.set(0, 0, 0);
+        rightArm.rotation.set(0, 0, 0);
+        body.rotation.set(0, 0, 0);
+        leftHand.rotation.set(0, 0, 0);
+        rightHand.rotation.set(0, 0, 0);
+      }
+
+      // Rotation générale de l'avatar
+      avatarGroup.rotation.y += 0.01;
+
+      renderer.render(scene, camera);
+      gl.endFrameEXP();
+    };
+
+    animate();
   };
 
-  const leftArmAnimatedStyle = {
-    transform: [
-      { rotate: `${leftArmRotation}deg` },
-      { scale: scale },
-      { translateZ: depth },
-    ],
-  };
-
-  const rightArmAnimatedStyle = {
-    transform: [
-      { rotate: `${rightArmRotation}deg` },
-      { scale: scale },
-      { translateZ: depth },
-    ],
-  };
-
-  const bodyAnimatedStyle = {
-    transform: [
-      { scale: scale },
-      { translateZ: depth },
-    ],
-  };
+  if (!isWeb) {
+    // Fallback pour mobile - avatar 2D simple
+    return (
+      <View style={[styles.container, style]}>
+        <View style={[styles.avatar2D, isSigning && styles.avatarSigning]}>
+          <Text style={styles.avatarEmoji}>🤟</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.avatar3DContainer}>
-        {/* Tête avec effet 3D */}
-        <Animated.View style={[styles.head, headAnimatedStyle]}>
-          <View style={styles.head3D}>
-            <View style={styles.headFront}>
-              <View style={styles.eyes}>
-                <View style={styles.eye} />
-                <View style={styles.eye} />
-              </View>
-              <View style={styles.mouth} />
-            </View>
-            <View style={styles.headShadow} />
-          </View>
-        </Animated.View>
-
-        {/* Corps avec effet 3D */}
-        <Animated.View style={[styles.body, bodyAnimatedStyle]}>
-          <View style={styles.body3D}>
-            <View style={styles.bodyFront} />
-            <View style={styles.bodyShadow} />
-          </View>
-        </Animated.View>
-
-        {/* Bras gauche avec effet 3D */}
-        <Animated.View style={[styles.leftArm, leftArmAnimatedStyle]}>
-          <View style={styles.arm3D}>
-            <View style={styles.armFront} />
-            <View style={styles.armShadow} />
-          </View>
-          <View style={styles.leftHand}>
-            <View style={styles.hand3D}>
-              <View style={styles.handFront} />
-              <View style={styles.handShadow} />
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Bras droit avec effet 3D */}
-        <Animated.View style={[styles.rightArm, rightArmAnimatedStyle]}>
-          <View style={styles.arm3D}>
-            <View style={styles.armFront} />
-            <View style={styles.armShadow} />
-          </View>
-          <View style={styles.rightHand}>
-            <View style={styles.hand3D}>
-              <View style={styles.handFront} />
-              <View style={styles.handShadow} />
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Jambes avec effet 3D */}
-        <View style={styles.legs}>
-          <View style={styles.leg3D}>
-            <View style={styles.legFront} />
-            <View style={styles.legShadow} />
-          </View>
-          <View style={styles.leg3D}>
-            <View style={styles.legFront} />
-            <View style={styles.legShadow} />
-          </View>
-        </View>
-
-        {/* Pieds */}
-        <View style={styles.feet}>
-          <View style={styles.foot} />
-          <View style={styles.foot} />
-        </View>
-      </View>
+      <GLView
+        style={styles.glView}
+        onContextCreate={onContextCreate}
+      />
     </View>
   );
 };
@@ -362,190 +208,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatar3DContainer: {
-    width: 180,
-    height: 180,
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  head: {
-    position: 'absolute',
-    top: 0,
-    zIndex: 5,
-  },
-  head3D: {
-    position: 'relative',
-  },
-  headFront: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#FFD700',
-    borderWidth: 4,
-    borderColor: '#FFA500',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headShadow: {
-    position: 'absolute',
-    top: 4,
-    left: 4,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    zIndex: -1,
-  },
-  eyes: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  glView: {
+    flex: 1,
     width: '100%',
-    paddingHorizontal: 2,
+    height: '100%',
   },
-  eye: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#000',
-  },
-  mouth: {
-    width: 20,
-    height: 4,
-    backgroundColor: '#000',
-    borderRadius: 2,
-    marginTop: 4,
-  },
-  body: {
-    position: 'absolute',
-    top: 50,
-    zIndex: 4,
-  },
-  body3D: {
-    position: 'relative',
-  },
-  bodyFront: {
-    width: 44,
-    height: 66,
+  avatar2D: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#4A90E2',
-    borderRadius: 22,
-    borderWidth: 4,
-    borderColor: '#357ABD',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#146454',
   },
-  bodyShadow: {
-    position: 'absolute',
-    top: 4,
-    left: 4,
-    width: 44,
-    height: 66,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 22,
-    zIndex: -1,
+  avatarSigning: {
+    backgroundColor: '#FFD700',
+    transform: [{ scale: 1.1 }],
   },
-  leftArm: {
-    position: 'absolute',
-    top: 55,
-    left: -20,
-    zIndex: 3,
-    transformOrigin: 'top center',
-  },
-  rightArm: {
-    position: 'absolute',
-    top: 55,
-    right: -20,
-    zIndex: 3,
-    transformOrigin: 'top center',
-  },
-  arm3D: {
-    position: 'relative',
-  },
-  armFront: {
-    width: 18,
-    height: 44,
-    backgroundColor: '#4A90E2',
-    borderRadius: 9,
-    borderWidth: 3,
-    borderColor: '#357ABD',
-  },
-  armShadow: {
-    position: 'absolute',
-    top: 3,
-    left: 3,
-    width: 18,
-    height: 44,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 9,
-    zIndex: -1,
-  },
-  leftHand: {
-    position: 'absolute',
-    bottom: -8,
-    left: -4,
-  },
-  rightHand: {
-    position: 'absolute',
-    bottom: -8,
-    right: -4,
-  },
-  hand3D: {
-    position: 'relative',
-  },
-  handFront: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FFE0B2',
-    borderWidth: 3,
-    borderColor: '#FFCC80',
-  },
-  handShadow: {
-    position: 'absolute',
-    top: 3,
-    left: 3,
-    width: 20,
-    height: 20,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 10,
-    zIndex: -1,
-  },
-  legs: {
-    position: 'absolute',
-    top: 110,
-    flexDirection: 'row',
-    gap: 8,
-  },
-  leg3D: {
-    position: 'relative',
-  },
-  legFront: {
-    width: 13,
-    height: 32,
-    backgroundColor: '#4A90E2',
-    borderRadius: 6.5,
-    borderWidth: 3,
-    borderColor: '#357ABD',
-  },
-  legShadow: {
-    position: 'absolute',
-    top: 3,
-    left: 3,
-    width: 13,
-    height: 32,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 6.5,
-    zIndex: -1,
-  },
-  feet: {
-    position: 'absolute',
-    top: 138,
-    flexDirection: 'row',
-    gap: 16,
-  },
-  foot: {
-    width: 20,
-    height: 8,
-    backgroundColor: '#333',
-    borderRadius: 4,
+  avatarEmoji: {
+    fontSize: 24,
   },
 });
 
