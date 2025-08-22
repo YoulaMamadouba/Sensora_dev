@@ -46,7 +46,7 @@ const SignLanguageAvatar: React.FC<SignLanguageAvatarProps> = ({
       0.1,
       1000
     );
-    camera.position.set(0, 0, 3.5); // Un peu plus proche pour voir l'avatar plus grand
+    camera.position.set(0, -0.5, 4); // Plus loin et légèrement vers le bas pour voir tout l'avatar
 
     // Ajouter la lumière
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Plus de lumière
@@ -75,8 +75,8 @@ const SignLanguageAvatar: React.FC<SignLanguageAvatarProps> = ({
       
       console.log('Modèle GLB chargé avec succès:', avatarModel);
       
-      // Ajuster la taille et la position du modèle - UN PEU PLUS GRAND
-      avatarModel.scale.set(1.8, 1.8, 1.8); // Un peu plus grand pour être bien visible
+      // Ajuster la taille et la position du modèle - TAILLE OPTIMISÉE
+      avatarModel.scale.set(1.8, 1.8, 1.8); // Taille optimisée pour voir tout l'avatar
       avatarModel.position.set(0, 0, 0);
       
       // Centrer le modèle

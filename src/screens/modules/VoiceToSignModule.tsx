@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 60,
-    paddingBottom: 20,
+    paddingBottom: 15,
     backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(20, 100, 84, 0.1)",
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     alignItems: "center",
-    marginVertical: 30,
+    marginVertical: 8,
     position: "relative",
   },
   avatarGlow: {
@@ -1035,8 +1035,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   avatar3D: {
-    width: 200,
-    height: 200,
+    width: 240,
+    height: 240,
     position: "relative",
     alignItems: "center",
     justifyContent: "center",
