@@ -34,6 +34,7 @@ import { useSupabaseAuth } from "../../context/SupabaseAuthContext"
 import OpenAIService from "../../services/OpenAIService"
 import { impactAsync } from "../../utils/platformUtils"
 import { useNavigation } from "@react-navigation/native"
+import SignLanguageAvatar from "../../components/SignLanguageAvatar"
 
 const { width, height } = Dimensions.get("window")
 
@@ -467,20 +468,33 @@ const VoiceToSignModule: React.FC = () => {
         style={styles.scrollView}
       >
         <Animated.View style={contentAnimatedStyle}>
-          {/* Avatar 3D Premium */}
+          {/* Avatar 3D Premium avec Avatar LSF */}
           <View style={styles.avatarContainer}>
             <Animated.View style={[styles.avatarGlow, glowAnimatedStyle]} />
-            <Animated.View style={[styles.avatar, avatarAnimatedStyle]}>
-              <LinearGradient 
-                colors={["#146454", "#029ED6"]} 
-                style={styles.avatarGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Ionicons name="person" size={60} color="#FFFFFF" />
-              </LinearGradient>
-              <Animated.View style={[styles.avatarPulse, pulseAnimatedStyle]} />
-            </Animated.View>
+            
+            {/* Avatar 3D LSF qui remplace l'icône utilisateur */}
+            {transcribedText && !isProcessing ? (
+              <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
+                <SignLanguageAvatar
+                  isSigning={!!transcribedText && !isProcessing}
+                  signText={transcribedText}
+                  currentSign={currentSign}
+                  style={styles.avatar3DMain}
+                />
+              </Animated.View>
+            ) : (
+              <Animated.View style={[styles.avatar, avatarAnimatedStyle]}>
+                <LinearGradient 
+                  colors={["#146454", "#029ED6"]} 
+                  style={styles.avatarGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="person" size={60} color="#FFFFFF" />
+                </LinearGradient>
+                <Animated.View style={[styles.avatarPulse, pulseAnimatedStyle]} />
+              </Animated.View>
+            )}
 
             {isProcessing && (
               <View style={styles.processingIndicator}>
@@ -496,6 +510,8 @@ const VoiceToSignModule: React.FC = () => {
               </View>
             )}
           </View>
+
+
 
           {/* Barre de progression */}
           {isRecording && (
@@ -1017,6 +1033,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginLeft: 8,
+  },
+  avatar3D: {
+    width: 200,
+    height: 200,
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  },
+  avatar3DMain: {
+    transform: [{ scale: 1.2 }],
+    backgroundColor: 'transparent',
+  },
+  avatarSection: {
+    alignItems: "center",
+    marginTop: 20,
+    paddingVertical: 15,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "rgba(20, 100, 84, 0.1)",
+    minHeight: 200,
+    justifyContent: "center",
+  },
+  avatarDescription: {
+    fontSize: 12,
+    color: "#146454",
+    opacity: 0.7,
+    textAlign: "center",
+    fontWeight: "500",
   },
 })
 

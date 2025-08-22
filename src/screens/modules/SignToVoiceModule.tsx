@@ -19,6 +19,7 @@ import Animated, {
 } from "react-native-reanimated"
 import * as Haptics from "expo-haptics"
 import { useNavigation } from "@react-navigation/native"
+import SignLanguageAvatar from "../../components/SignLanguageAvatar"
 
 const { width, height } = Dimensions.get("window")
 
@@ -307,6 +308,19 @@ const SignToVoiceModule: React.FC = () => {
                 </LinearGradient>
                 <Animated.View style={[styles.handPulse, pulseAnimatedStyle]} />
               </Animated.View>
+            )}
+
+            {/* Avatar 3D pour simulation LSF */}
+            {detectedSigns && (
+              <View style={styles.avatarSection}>
+                <SignLanguageAvatar
+                  isSigning={!!detectedSigns && !isProcessing}
+                  signText={detectedSigns}
+                  currentSign={currentSign}
+                  style={styles.avatar3D}
+                />
+                <Text style={styles.avatarDescription}>Simulation 3D des signes détectés</Text>
+              </View>
             )}
 
             {isProcessing && (
@@ -879,6 +893,25 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 11,
     color: "#146454",
+    opacity: 0.7,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  avatarSection: {
+    alignItems: "center",
+    marginTop: 20,
+    paddingVertical: 15,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "rgba(2, 158, 214, 0.1)",
+  },
+  avatar3D: {
+    marginBottom: 10,
+  },
+  avatarDescription: {
+    fontSize: 12,
+    color: "#029ED6",
     opacity: 0.7,
     textAlign: "center",
     fontWeight: "500",
