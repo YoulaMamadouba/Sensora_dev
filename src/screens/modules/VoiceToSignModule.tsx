@@ -55,6 +55,11 @@ const VoiceToSignModule: React.FC = () => {
   const [signTranslation, setSignTranslation] = useState("")
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [openAINotification, setOpenAINotification] = useState<string | null>(null)
+  const [uploadStats, setUploadStats] = useState({
+    totalUploads: 0,
+    successfulUploads: 0,
+    failedUploads: 0
+  })
 
   // Animations values
   const micScale = useSharedValue(1)
@@ -68,12 +73,25 @@ const VoiceToSignModule: React.FC = () => {
   const glowOpacity = useSharedValue(0)
   const progressValue = useSharedValue(0)
 
-  // Demander les permissions audio
+  // Demander les permissions audio et tester la configuration
   useEffect(() => {
     (async () => {
+      // Demander les permissions audio
       const { status } = await Audio.requestPermissionsAsync()
       if (status !== 'granted') {
         Alert.alert('Permission refusée', 'L\'accès au microphone est nécessaire pour enregistrer l\'audio.')
+      }
+
+      // Tester la configuration OpenAI
+      try {
+        const isOpenAIConfigured = await openAIService.testConnection()
+        if (!isOpenAIConfigured) {
+          console.warn('⚠️ OpenAI non configuré ou non accessible')
+          showOpenAINotification('OpenAI non configuré - Mode simulation activé')
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur test OpenAI:', error)
+        showOpenAINotification('Erreur configuration OpenAI - Mode simulation activé')
       }
     })()
   }, [])
@@ -169,10 +187,17 @@ const VoiceToSignModule: React.FC = () => {
           if (audioFile) {
             console.log('✅ Fichier audio uploadé avec succès:', audioFile.id)
             
+            // Mettre à jour les statistiques d'upload
+            setUploadStats(prev => ({
+              ...prev,
+              totalUploads: prev.totalUploads + 1,
+              successfulUploads: prev.successfulUploads + 1
+            }))
+            
             // Transcription avec OpenAI
             try {
               console.log('🎤 Début de la transcription avec OpenAI...')
-              const transcription = await openAIService.transcribeAudio(audioFile.file_path, 'fr')
+              const transcription = await openAIService.transcribeAudio(audioFile.public_url, 'fr')
               
               if (transcription.text) {
                 setTranscribedText(transcription.text)
@@ -250,7 +275,27 @@ const VoiceToSignModule: React.FC = () => {
           
         } catch (uploadError) {
           console.error('❌ Erreur upload:', uploadError)
-          Alert.alert('Erreur', 'Impossible d\'uploader le fichier audio')
+          
+          // Gestion spécifique des erreurs d'upload
+          let errorMessage = 'Impossible d\'uploader le fichier audio'
+          if (uploadError instanceof Error) {
+            if (uploadError.message.includes('non connecté')) {
+              errorMessage = 'Vous devez être connecté pour enregistrer des fichiers audio'
+            } else if (uploadError.message.includes('permission')) {
+              errorMessage = 'Permissions insuffisantes pour uploader le fichier'
+            } else {
+              errorMessage = uploadError.message
+            }
+          }
+          
+          showOpenAINotification(`Upload échoué: ${errorMessage}`)
+          
+          // Mettre à jour les statistiques d'upload
+          setUploadStats(prev => ({
+            ...prev,
+            totalUploads: prev.totalUploads + 1,
+            failedUploads: prev.failedUploads + 1
+          }))
           
           // Fallback vers la transcription simulée
           const mockTranscription = "Bonjour, comment allez-vous aujourd'hui ?"
@@ -296,7 +341,12 @@ const VoiceToSignModule: React.FC = () => {
       
       if (audioFile) {
         console.log('✅ Fichier audio uploadé avec succès:', audioFile.id)
-        return audioFile
+        
+        // Créer un objet avec l'URL publique pour OpenAI
+        return {
+          ...audioFile,
+          public_url: audioFile.file_path // L'URL publique est dans file_path
+        }
       } else {
         console.error('❌ Échec de l\'upload du fichier audio')
         return null
@@ -621,23 +671,23 @@ const VoiceToSignModule: React.FC = () => {
             <View style={styles.statsGrid}>
               <View style={styles.statCard}>
                 <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.statGradient}>
-                  <Ionicons name="time" size={24} color="#146454" />
-                  <Text style={styles.statNumber}>3.2s</Text>
-                  <Text style={styles.statLabel}>Durée moyenne</Text>
+                  <Ionicons name="cloud-upload" size={24} color="#146454" />
+                  <Text style={styles.statNumber}>{uploadStats.totalUploads}</Text>
+                  <Text style={styles.statLabel}>Uploads</Text>
                 </LinearGradient>
               </View>
               <View style={styles.statCard}>
                 <LinearGradient colors={["rgba(2, 158, 214, 0.1)", "rgba(20, 100, 84, 0.05)"]} style={styles.statGradient}>
                   <Ionicons name="checkmark-circle" size={24} color="#029ED6" />
-                  <Text style={styles.statNumber}>95%</Text>
+                  <Text style={styles.statNumber}>{Math.round(confidence)}%</Text>
                   <Text style={styles.statLabel}>Précision</Text>
                 </LinearGradient>
               </View>
               <View style={styles.statCard}>
                 <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.statGradient}>
                   <Ionicons name="mic" size={24} color="#146454" />
-                  <Text style={styles.statNumber}>12</Text>
-                  <Text style={styles.statLabel}>Sessions</Text>
+                  <Text style={styles.statNumber}>{uploadStats.successfulUploads}</Text>
+                  <Text style={styles.statLabel}>Réussis</Text>
                 </LinearGradient>
               </View>
             </View>

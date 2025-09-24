@@ -37,14 +37,17 @@ class OpenAIService {
       }
 
       console.log('🎤 Début de la transcription avec OpenAI...')
+      console.log('🔗 URL audio:', audioUrl)
 
       // Télécharger le fichier audio depuis l'URL
       const audioResponse = await fetch(audioUrl)
       if (!audioResponse.ok) {
-        throw new Error('Impossible de télécharger le fichier audio')
+        console.error('❌ Erreur téléchargement audio:', audioResponse.status, audioResponse.statusText)
+        throw new Error(`Impossible de télécharger le fichier audio: ${audioResponse.statusText}`)
       }
 
       const audioBlob = await audioResponse.blob()
+      console.log('📁 Taille du fichier audio:', audioBlob.size, 'bytes')
       
       // Créer un FormData pour l'upload
       const formData = new FormData()
@@ -52,6 +55,8 @@ class OpenAIService {
       formData.append('model', 'whisper-1')
       formData.append('language', language)
       formData.append('response_format', 'json')
+
+      console.log('📤 Envoi vers OpenAI Whisper...')
 
       const response = await fetch(`${this.baseUrl}/audio/transcriptions`, {
         method: 'POST',
@@ -65,6 +70,8 @@ class OpenAIService {
         const errorData = await response.json().catch(() => ({}))
         const errorMessage = errorData.error?.message || response.statusText
         
+        console.error('❌ Erreur API OpenAI:', response.status, errorMessage)
+        
         // Gestion spécifique des erreurs de quota
         if (response.status === 429 || errorMessage.includes('quota')) {
           throw new Error('Quota OpenAI dépassé. Utilisation de la transcription simulée.')
@@ -72,6 +79,8 @@ class OpenAIService {
           throw new Error('Clé API OpenAI invalide.')
         } else if (response.status === 403) {
           throw new Error('Accès refusé à l\'API OpenAI.')
+        } else if (response.status === 400) {
+          throw new Error('Format de fichier audio non supporté.')
         } else {
           throw new Error(`Erreur OpenAI: ${errorMessage}`)
         }
