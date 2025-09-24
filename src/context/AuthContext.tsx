@@ -6,6 +6,7 @@ import { Alert } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useSupabaseAuth } from './SupabaseAuthContext'
+import { performMaintenance } from '../utils/userCleanup'
 
 interface User {
   id: string
@@ -126,6 +127,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (result?.user) {
           console.log('✅ Utilisateur inscrit avec succès, mise à jour du contexte local')
           
+          // Attendre un peu pour que la session soit bien établie
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          // Vérifier que l'utilisateur a bien une session active
+          const currentSession = await supabaseService.getCurrentSession()
+          if (!currentSession) {
+            console.warn('⚠️ Aucune session active après inscription, tentative de connexion...')
+            // Essayer de se connecter automatiquement
+            try {
+              const signInResult = await supabaseService.signIn(email, password)
+              if (signInResult?.user) {
+                console.log('✅ Connexion automatique réussie après inscription')
+              }
+            } catch (signInError) {
+              console.error('❌ Échec de la connexion automatique:', signInError)
+            }
+          }
+          
           // Diagnostiquer le rôle utilisateur
           const diagnosis = await supabaseService.diagnoseUserRole(result.user.id)
           if (!diagnosis.success) {
@@ -159,10 +178,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           
           // S'assurer que le type d'utilisateur est correctement enregistré dans le stockage local
           try {
+            await AsyncStorage.setItem('user', JSON.stringify(mappedUser))
             await AsyncStorage.setItem('userType', type)
-            console.log('✅ Type d\'utilisateur enregistré dans le stockage local:', type)
+            await AsyncStorage.setItem('isAuthenticated', 'true')
+            console.log('✅ Données utilisateur enregistrées dans le stockage local')
           } catch (storageError) {
-            console.error('❌ Erreur lors de l\'enregistrement du type d\'utilisateur dans le stockage local:', storageError)
+            console.error('❌ Erreur lors de l\'enregistrement des données utilisateur:', storageError)
           }
           
           return true
@@ -222,6 +243,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     setUser(null)
     setUserType(null)
+  }
+
+  const performUserMaintenance = async () => {
+    try {
+      if (!supabaseService) {
+        console.warn('⚠️ Service Supabase non disponible pour la maintenance')
+        return false
+      }
+
+      console.log('🔧 Début de la maintenance des utilisateurs...')
+      const maintenanceResult = await performMaintenance(supabaseService)
+      
+      if (maintenanceResult.success) {
+        console.log('✅ Maintenance réussie:', maintenanceResult.summary)
+        return true
+      } else {
+        console.warn('⚠️ Maintenance terminée avec des problèmes:', maintenanceResult.summary)
+        return false
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la maintenance:', error)
+      return false
+    }
   }
 
   // Créer la valeur du contexte avec toutes les méthodes et états nécessaires

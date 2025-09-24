@@ -55,15 +55,30 @@ class SupabaseService {
     try {
       console.log('📝 Inscription utilisateur:', email, 'avec le rôle:', userRole)
       
-      // Vérifier d'abord si l'utilisateur existe déjà
-      const { data: existingUser } = await this.supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single()
-
-      if (existingUser) {
+      // Vérifier d'abord si l'utilisateur existe déjà dans auth.users
+      const { data: existingAuthUser } = await this.supabase.auth.getUser()
+      if (existingAuthUser?.user?.email === email) {
         throw new Error('Un utilisateur avec cet email existe déjà')
+      }
+
+      // Vérifier dans la table users avec gestion d'erreur
+      try {
+        const { data: existingUser, error: checkError } = await this.supabase
+          .from('users')
+          .select('id, email')
+          .eq('email', email)
+          .maybeSingle()
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.warn('⚠️ Erreur lors de la vérification utilisateur existant:', checkError.message)
+        }
+
+        if (existingUser) {
+          throw new Error('Un utilisateur avec cet email existe déjà')
+        }
+      } catch (checkError) {
+        // Si c'est une erreur de vérification, continuer quand même
+        console.warn('⚠️ Impossible de vérifier l\'utilisateur existant, continuation...')
       }
 
       // Créer d'abord le compte d'authentification
@@ -74,23 +89,30 @@ class SupabaseService {
           data: {
             full_name: fullName,
             user_role: userRole
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
         }
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ Erreur création compte auth:', error)
+        throw error
+      }
 
-      // Créer l'entrée dans la table users
-      if (data.user) {
-        console.log('✅ Compte d\'authentification créé, création du profil avec le rôle:', userRole)
-        
-        // S'assurer que le rôle est bien défini
-        const userRoleToInsert = userRole || 'entendant'
-        console.log('🔍 Rôle à insérer dans la base de données:', userRoleToInsert)
-        
-        // Utiliser une transaction pour s'assurer que tout est cohérent
-        const { error: profileError } = await this.supabase
+      if (!data.user) {
+        throw new Error('Échec de la création du compte d\'authentification')
+      }
+
+      console.log('✅ Compte d\'authentification créé:', data.user.id)
+
+      // Attendre un peu pour que l'utilisateur soit bien créé
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Créer l'entrée dans la table users avec gestion d'erreur améliorée
+      const userRoleToInsert = userRole || 'entendant'
+      console.log('🔍 Création du profil avec le rôle:', userRoleToInsert)
+      
+      try {
+        const { data: profileData, error: profileError } = await this.supabase
           .from('users')
           .insert({
             id: data.user.id,
@@ -100,17 +122,27 @@ class SupabaseService {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
+          .select()
+          .single()
 
         if (profileError) {
           console.error('❌ Erreur création profil:', profileError)
-          // Essayer de supprimer le compte d'authentification en cas d'échec
-          try {
-            await this.supabase.auth.admin.deleteUser(data.user.id)
-          } catch (deleteError) {
-            console.error('❌ Erreur suppression compte après échec profil:', deleteError)
+          
+          // Si c'est une erreur de contrainte unique, l'utilisateur existe peut-être déjà
+          if (profileError.code === '23505') {
+            console.log('🔄 Utilisateur existe déjà, tentative de connexion...')
+            // Essayer de se connecter à la place
+            const signInResult = await this.signIn(email, password)
+            if (signInResult) {
+              return signInResult
+            }
           }
-          throw profileError
+          
+          // Ne pas supprimer le compte auth, laisser l'utilisateur se connecter
+          throw new Error('Erreur lors de la création du profil utilisateur')
         }
+
+        console.log('✅ Profil utilisateur créé avec succès:', profileData)
 
         // Vérifier que le profil a été créé correctement
         const { data: createdProfile, error: verifyError } = await this.supabase
@@ -122,18 +154,17 @@ class SupabaseService {
         if (verifyError) {
           console.error('❌ Erreur vérification profil créé:', verifyError)
         } else {
-          console.log('✅ Profil utilisateur créé avec succès:', {
+          console.log('✅ Profil vérifié:', {
             id: createdProfile.id,
             email: createdProfile.email,
             full_name: createdProfile.full_name,
             user_role: createdProfile.user_role
           })
 
-          // Si le rôle ne correspond pas à ce qui était attendu, le corriger
+          // Si le rôle ne correspond pas, le corriger
           if (createdProfile.user_role !== userRoleToInsert) {
             console.warn(`⚠️ Rôle incorrect détecté: ${createdProfile.user_role} au lieu de ${userRoleToInsert}`)
             
-            // Forcer la mise à jour du rôle
             const { error: updateError } = await this.supabase
               .from('users')
               .update({ 
@@ -149,18 +180,23 @@ class SupabaseService {
             }
           }
         }
+
+      } catch (insertError) {
+        console.error('❌ Erreur lors de l\'insertion du profil:', insertError)
+        // Ne pas supprimer le compte auth, l'utilisateur peut se connecter
+        throw insertError
       }
 
-      console.log('✅ Inscription réussie')
+      console.log('✅ Inscription complète réussie')
       return { user: data.user, session: data.session }
       
     } catch (error: any) {
       console.error('❌ Erreur inscription:', error)
       
-      // Gestion spécifique des erreurs Supabase
+      // Gestion spécifique des erreurs
       if (error?.message?.includes('For security purposes')) {
         throw new Error('Trop de tentatives d\'inscription. Veuillez attendre quelques secondes avant de réessayer.')
-      } else if (error?.message?.includes('User already registered')) {
+      } else if (error?.message?.includes('User already registered') || error?.message?.includes('already exists')) {
         throw new Error('Cette adresse email est déjà utilisée. Essayez de vous connecter à la place.')
       } else if (error?.message?.includes('Invalid email')) {
         throw new Error('Adresse email invalide.')
