@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, TextInput, Alert } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, TextInput, Alert, StatusBar } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
 import Animated, {
@@ -18,6 +18,7 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated"
 import { impactAsync } from "../../utils/platformUtils"
+import * as Haptics from "expo-haptics"
 import { useNavigation } from "@react-navigation/native"
 
 const { width, height } = Dimensions.get("window")
