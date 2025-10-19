@@ -12,6 +12,7 @@ import {
   Platform,
   ScrollView,
   StatusBar,
+  FlatList,
 } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
@@ -60,6 +61,8 @@ const VoiceToSignModule: React.FC = () => {
     successfulUploads: 0,
     failedUploads: 0
   })
+  const [openAIStatus, setOpenAIStatus] = useState<'active' | 'quota_exceeded' | 'not_configured' | 'unknown'>('unknown')
+  const [useFlatList, setUseFlatList] = useState(false)
 
   // Animations values
   const micScale = useSharedValue(1)
@@ -87,10 +90,14 @@ const VoiceToSignModule: React.FC = () => {
         const isOpenAIConfigured = await openAIService.testConnection()
         if (!isOpenAIConfigured) {
           console.warn('⚠️ OpenAI non configuré ou non accessible')
+          setOpenAIStatus('not_configured')
           showOpenAINotification('OpenAI non configuré - Mode simulation activé')
+        } else {
+          setOpenAIStatus('active')
         }
       } catch (error) {
         console.warn('⚠️ Erreur test OpenAI:', error)
+        setOpenAIStatus('unknown')
         showOpenAINotification('Erreur configuration OpenAI - Mode simulation activé')
       }
     })()
@@ -220,11 +227,14 @@ const VoiceToSignModule: React.FC = () => {
                   let errorMessage = 'Erreur de traduction'
                   if (translationError instanceof Error) {
                     if (translationError.message.includes('quota')) {
-                      errorMessage = 'Quota OpenAI dépassé. Utilisation de la traduction simulée.'
+                      errorMessage = 'Quota OpenAI épuisé - Traduction simulée'
+                      setOpenAIStatus('quota_exceeded')
                     } else if (translationError.message.includes('Clé API')) {
-                      errorMessage = 'Configuration OpenAI manquante. Utilisation de la traduction simulée.'
+                      errorMessage = 'Configuration OpenAI manquante - Traduction simulée'
+                      setOpenAIStatus('not_configured')
                     } else {
-                      errorMessage = 'Erreur de traduction. Utilisation de la traduction simulée.'
+                      errorMessage = 'Erreur de traduction - Traduction simulée'
+                      setOpenAIStatus('unknown')
                     }
                   }
                   
@@ -248,25 +258,35 @@ const VoiceToSignModule: React.FC = () => {
               let errorMessage = 'Erreur de transcription'
               if (transcriptionError instanceof Error) {
                 if (transcriptionError.message.includes('quota')) {
-                  errorMessage = 'Quota OpenAI dépassé. Utilisation de la transcription simulée.'
+                  errorMessage = 'Quota OpenAI épuisé - Mode simulation activé'
+                  setOpenAIStatus('quota_exceeded')
                 } else if (transcriptionError.message.includes('Clé API')) {
-                  errorMessage = 'Configuration OpenAI manquante. Utilisation de la transcription simulée.'
+                  errorMessage = 'Configuration OpenAI manquante - Mode simulation activé'
+                  setOpenAIStatus('not_configured')
                 } else {
-                  errorMessage = 'Erreur de transcription. Utilisation de la transcription simulée.'
+                  errorMessage = 'Erreur de transcription - Mode simulation activé'
+                  setOpenAIStatus('unknown')
                 }
               }
               
               // Afficher une notification informatif à l'utilisateur
               showOpenAINotification(errorMessage)
               
-              // Fallback vers la transcription simulée
-              const mockTranscription = "Bonjour, comment allez-vous aujourd'hui ?"
-              setTranscribedText(mockTranscription)
-              setConfidence(95)
+              // Fallback vers la transcription simulée avec contenu plus intelligent
+              const fallbackTranscriptions = [
+                "Bonjour, comment allez-vous aujourd'hui ?",
+                "Je voudrais apprendre la langue des signes",
+                "Merci beaucoup pour votre aide",
+                "Pouvez-vous répéter s'il vous plaît ?",
+                "J'ai bien compris votre message"
+              ]
+              const randomTranscription = fallbackTranscriptions[Math.floor(Math.random() * fallbackTranscriptions.length)]
+              setTranscribedText(randomTranscription)
+              setConfidence(85) // Confiance réduite pour le mode simulation
               
-              const localEmojis = generateSignEmojis(mockTranscription)
+              const localEmojis = generateSignEmojis(randomTranscription)
               setSignEmojis(localEmojis)
-              setSignTranslation('Traduction LSF non disponible')
+              setSignTranslation('Mode simulation - Traduction LSF non disponible')
             }
             
           } else {
@@ -297,14 +317,21 @@ const VoiceToSignModule: React.FC = () => {
             failedUploads: prev.failedUploads + 1
           }))
           
-          // Fallback vers la transcription simulée
-          const mockTranscription = "Bonjour, comment allez-vous aujourd'hui ?"
-          setTranscribedText(mockTranscription)
-          setConfidence(95)
+          // Fallback vers la transcription simulée avec contenu plus intelligent
+          const fallbackTranscriptions = [
+            "Bonjour, comment allez-vous aujourd'hui ?",
+            "Je voudrais apprendre la langue des signes",
+            "Merci beaucoup pour votre aide",
+            "Pouvez-vous répéter s'il vous plaît ?",
+            "J'ai bien compris votre message"
+          ]
+          const randomTranscription = fallbackTranscriptions[Math.floor(Math.random() * fallbackTranscriptions.length)]
+          setTranscribedText(randomTranscription)
+          setConfidence(85) // Confiance réduite pour le mode simulation
           
-          const localEmojis = generateSignEmojis(mockTranscription)
+          const localEmojis = generateSignEmojis(randomTranscription)
           setSignEmojis(localEmojis)
-          setSignTranslation('Traduction LSF non disponible')
+          setSignTranslation('Mode simulation - Traduction LSF non disponible')
         }
           
         // Animation de l'avatar
@@ -360,10 +387,17 @@ const VoiceToSignModule: React.FC = () => {
 
   const showOpenAINotification = (message: string) => {
     setOpenAINotification(message)
-    // Effacer la notification après 5 secondes
+    // Effacer la notification après 7 secondes pour laisser le temps de lire
     setTimeout(() => {
       setOpenAINotification(null)
-    }, 5000)
+    }, 7000)
+  }
+
+  const getQuotaAdvice = () => {
+    if (openAIStatus === 'quota_exceeded') {
+      return "💡 Pour réactiver OpenAI : ajoutez des crédits sur platform.openai.com"
+    }
+    return null
   }
 
   const generateSignEmojis = (text: string) => {
@@ -434,6 +468,14 @@ const VoiceToSignModule: React.FC = () => {
     navigation.goBack()
   }
 
+  const handleScrollViewTouch = () => {
+    // Si le ScrollView ne répond pas, basculer vers FlatList
+    if (!useFlatList) {
+      console.log('🔄 Basculement vers FlatList pour améliorer le défilement')
+      setUseFlatList(true)
+    }
+  }
+
   const micAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: micScale.value }],
   }))
@@ -472,6 +514,196 @@ const VoiceToSignModule: React.FC = () => {
   const progressAnimatedStyle = useAnimatedStyle(() => ({
     width: `${progressValue.value * 100}%`,
   }))
+
+  // Données pour le FlatList
+  const flatListData = [
+    { id: 'avatar', type: 'avatar' },
+    { id: 'progress', type: 'progress' },
+    { id: 'text', type: 'text' },
+    { id: 'controls', type: 'controls' },
+    { id: 'subtitles', type: 'subtitles' },
+    { id: 'stats', type: 'stats' },
+  ]
+
+  const renderFlatListItem = ({ item }: { item: { id: string; type: string } }) => {
+    switch (item.type) {
+      case 'avatar':
+        return (
+          <Animated.View style={contentAnimatedStyle}>
+            <View style={styles.avatarContainer}>
+              <Animated.View style={[styles.avatarGlow, glowAnimatedStyle]} />
+              
+              {transcribedText && !isProcessing ? (
+                <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
+                  <SignLanguageAvatar
+                    isSigning={!!transcribedText && !isProcessing}
+                    signText={transcribedText}
+                    currentSign={currentSign}
+                    style={styles.avatar3DMain}
+                  />
+                </Animated.View>
+              ) : (
+                <Animated.View style={[styles.avatar, avatarAnimatedStyle]}>
+                  <LinearGradient 
+                    colors={["#146454", "#029ED6"]} 
+                    style={styles.avatarGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Ionicons name="person" size={60} color="#FFFFFF" />
+                  </LinearGradient>
+                  <Animated.View style={[styles.avatarPulse, pulseAnimatedStyle]} />
+                </Animated.View>
+              )}
+
+              {isProcessing && (
+                <View style={styles.processingIndicator}>
+                  <LinearGradient
+                    colors={["rgba(20, 100, 84, 0.15)", "rgba(2, 158, 214, 0.1)"]}
+                    style={styles.processingGradient}
+                  >
+                    <Animated.View style={styles.processingIcon}>
+                      <Ionicons name="sync" size={20} color="#146454" />
+                    </Animated.View>
+                    <Text style={styles.processingText}>Traduction en cours...</Text>
+                  </LinearGradient>
+                </View>
+              )}
+            </View>
+          </Animated.View>
+        )
+      case 'progress':
+        return isRecording ? (
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <Animated.View style={[styles.progressFill, progressAnimatedStyle]} />
+            </View>
+            <Text style={styles.progressText}>{Math.round(confidence)}% de confiance</Text>
+          </View>
+        ) : null
+      case 'text':
+        return transcribedText ? (
+          <View style={styles.textContainer}>
+            <LinearGradient
+              colors={["rgba(20, 100, 84, 0.08)", "rgba(2, 158, 214, 0.04)"]}
+              style={styles.textGradient}
+            >
+              <Text style={styles.transcribedText}>{transcribedText}</Text>
+              <View style={styles.confidenceIndicator}>
+                <Ionicons name="checkmark-circle" size={16} color="#146454" />
+                <Text style={styles.confidenceText}>{Math.round(confidence)}% de précision</Text>
+              </View>
+            </LinearGradient>
+
+            {signTranslation && (
+              <View style={styles.signTranslationContainer}>
+                <LinearGradient
+                  colors={["rgba(2, 158, 214, 0.08)", "rgba(20, 100, 84, 0.04)"]}
+                  style={styles.signTranslationGradient}
+                >
+                  <Text style={styles.signTranslationTitle}>Traduction LSF</Text>
+                  <Text style={styles.signTranslationText}>{signTranslation}</Text>
+                </LinearGradient>
+              </View>
+            )}
+
+            <View style={styles.signTranslation}>
+              <Text style={styles.signText}>{signEmojis || "🤟 👋 ✋ 👍 🤝"}</Text>
+              <Text style={styles.signDescription}>Représentation en emojis</Text>
+            </View>
+          </View>
+        ) : null
+      case 'controls':
+        return (
+          <View style={styles.controlsContainer}>
+            {isRecording && (
+              <Animated.View style={[styles.soundWaves, waveAnimatedStyle]}>
+                {[...Array(7)].map((_, index) => (
+                  <Animated.View
+                    key={index}
+                    style={[
+                      styles.wave,
+                      {
+                        height: 15 + index * 8,
+                        backgroundColor: "#146454",
+                        opacity: interpolate(waveOpacity.value, [0, 1], [0.3, 1]),
+                      },
+                    ]}
+                  />
+                ))}
+              </Animated.View>
+            )}
+
+            <Animated.View style={micAnimatedStyle}>
+              <TouchableOpacity
+                style={[styles.micButton, isRecording && styles.micButtonActive]}
+                onPress={handleRecordToggle}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={isRecording ? ["#FF4757", "#FF3742"] : ["#146454", "#029ED6"]}
+                  style={styles.micButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name={isRecording ? "stop" : "mic"} size={40} color="#FFFFFF" />
+                </LinearGradient>
+                {isRecording && <Animated.View style={[styles.pulseCircle, pulseAnimatedStyle]} />}
+              </TouchableOpacity>
+            </Animated.View>
+
+            <Text style={styles.instructionText}>
+              {isRecording ? "Parlez maintenant..." : "Appuyez pour commencer l'enregistrement"}
+            </Text>
+          </View>
+        )
+      case 'subtitles':
+        return (
+          <View style={styles.subtitlesContainer}>
+            <Text style={styles.subtitlesTitle}>Sous-titres en temps réel</Text>
+            <LinearGradient 
+              colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} 
+              style={styles.subtitlesBox}
+            >
+              <Text style={styles.subtitlesText}>
+                {isRecording ? "Écoute en cours..." : transcribedText || "Aucun texte détecté"}
+              </Text>
+            </LinearGradient>
+          </View>
+        )
+      case 'stats':
+        return (
+          <View style={styles.statsContainer}>
+            <Text style={styles.statsTitle}>Statistiques de session</Text>
+            <View style={styles.statsGrid}>
+              <View style={styles.statCard}>
+                <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.statGradient}>
+                  <Ionicons name="cloud-upload" size={24} color="#146454" />
+                  <Text style={styles.statNumber}>{uploadStats.totalUploads}</Text>
+                  <Text style={styles.statLabel}>Uploads</Text>
+                </LinearGradient>
+              </View>
+              <View style={styles.statCard}>
+                <LinearGradient colors={["rgba(2, 158, 214, 0.1)", "rgba(20, 100, 84, 0.05)"]} style={styles.statGradient}>
+                  <Ionicons name="checkmark-circle" size={24} color="#029ED6" />
+                  <Text style={styles.statNumber}>{Math.round(confidence)}%</Text>
+                  <Text style={styles.statLabel}>Précision</Text>
+                </LinearGradient>
+              </View>
+              <View style={styles.statCard}>
+                <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.statGradient}>
+                  <Ionicons name="mic" size={24} color="#146454" />
+                  <Text style={styles.statNumber}>{uploadStats.successfulUploads}</Text>
+                  <Text style={styles.statLabel}>Réussis</Text>
+                </LinearGradient>
+              </View>
+            </View>
+          </View>
+        )
+      default:
+        return null
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -512,188 +744,262 @@ const VoiceToSignModule: React.FC = () => {
         </Animated.View>
       )}
 
-      <ScrollView 
-        showsVerticalScrollIndicator={false} 
-        contentContainerStyle={styles.scrollContent}
-        style={styles.scrollView}
-      >
-        <Animated.View style={contentAnimatedStyle}>
-          {/* Avatar 3D Premium avec Avatar LSF */}
-          <View style={styles.avatarContainer}>
-            <Animated.View style={[styles.avatarGlow, glowAnimatedStyle]} />
-            
-            {/* Avatar 3D LSF qui remplace l'icône utilisateur */}
-            {transcribedText && !isProcessing ? (
-              <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
-                <SignLanguageAvatar
-                  isSigning={!!transcribedText && !isProcessing}
-                  signText={transcribedText}
-                  currentSign={currentSign}
-                  style={styles.avatar3DMain}
-                />
-              </Animated.View>
-            ) : (
-              <Animated.View style={[styles.avatar, avatarAnimatedStyle]}>
-                <LinearGradient 
-                  colors={["#146454", "#029ED6"]} 
-                  style={styles.avatarGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <Ionicons name="person" size={60} color="#FFFFFF" />
-                </LinearGradient>
-                <Animated.View style={[styles.avatarPulse, pulseAnimatedStyle]} />
-              </Animated.View>
-            )}
+      {/* Indicateur de statut OpenAI */}
+      <View style={styles.openAIStatusContainer}>
+        <LinearGradient
+          colors={
+            openAIStatus === 'active' 
+              ? ["rgba(34, 197, 94, 0.1)", "rgba(16, 185, 129, 0.05)"]
+              : openAIStatus === 'quota_exceeded'
+              ? ["rgba(239, 68, 68, 0.1)", "rgba(220, 38, 38, 0.05)"]
+              : ["rgba(156, 163, 175, 0.1)", "rgba(107, 114, 128, 0.05)"]
+          }
+          style={styles.openAIStatusGradient}
+        >
+          <Ionicons 
+            name={
+              openAIStatus === 'active' 
+                ? "checkmark-circle" 
+                : openAIStatus === 'quota_exceeded'
+                ? "warning"
+                : "information-circle"
+            } 
+            size={16} 
+            color={
+              openAIStatus === 'active' 
+                ? "#22c55e" 
+                : openAIStatus === 'quota_exceeded'
+                ? "#ef4444"
+                : "#6b7280"
+            } 
+          />
+          <Text style={[
+            styles.openAIStatusText,
+            {
+              color: openAIStatus === 'active' 
+                ? "#22c55e" 
+                : openAIStatus === 'quota_exceeded'
+                ? "#ef4444"
+                : "#6b7280"
+            }
+          ]}>
+            {openAIStatus === 'active' 
+              ? "OpenAI actif" 
+              : openAIStatus === 'quota_exceeded'
+              ? "Quota épuisé - Mode simulation"
+              : openAIStatus === 'not_configured'
+              ? "OpenAI non configuré"
+              : "Statut OpenAI inconnu"
+            }
+          </Text>
+        </LinearGradient>
+        
+        {/* Conseil pour le quota */}
+        {getQuotaAdvice() && (
+          <Text style={styles.quotaAdviceText}>
+            {getQuotaAdvice()}
+          </Text>
+        )}
+      </View>
 
-            {isProcessing && (
-              <View style={styles.processingIndicator}>
-                <LinearGradient
-                  colors={["rgba(20, 100, 84, 0.15)", "rgba(2, 158, 214, 0.1)"]}
-                  style={styles.processingGradient}
-                >
-                  <Animated.View style={styles.processingIcon}>
-                    <Ionicons name="sync" size={20} color="#146454" />
-                  </Animated.View>
-                  <Text style={styles.processingText}>Traduction en cours...</Text>
-                </LinearGradient>
-              </View>
-            )}
-          </View>
-
-
-
-          {/* Barre de progression */}
-          {isRecording && (
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBar}>
-                <Animated.View style={[styles.progressFill, progressAnimatedStyle]} />
-              </View>
-              <Text style={styles.progressText}>{Math.round(confidence)}% de confiance</Text>
-            </View>
-          )}
-
-          {/* Texte transcrit */}
-          {transcribedText ? (
-            <View style={styles.textContainer}>
-              <LinearGradient
-                colors={["rgba(20, 100, 84, 0.08)", "rgba(2, 158, 214, 0.04)"]}
-                style={styles.textGradient}
-              >
-                <Text style={styles.transcribedText}>{transcribedText}</Text>
-                <View style={styles.confidenceIndicator}>
-                  <Ionicons name="checkmark-circle" size={16} color="#146454" />
-                  <Text style={styles.confidenceText}>{Math.round(confidence)}% de précision</Text>
-                </View>
-              </LinearGradient>
-
-              {/* Traduction LSF */}
-              {signTranslation && (
-                <View style={styles.signTranslationContainer}>
-                  <LinearGradient
-                    colors={["rgba(2, 158, 214, 0.08)", "rgba(20, 100, 84, 0.04)"]}
-                    style={styles.signTranslationGradient}
+      {useFlatList ? (
+        <FlatList
+          data={flatListData}
+          renderItem={renderFlatListItem}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          style={styles.scrollView}
+          nestedScrollEnabled={true}
+          scrollEnabled={true}
+          bounces={true}
+        />
+      ) : (
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          contentContainerStyle={styles.scrollContent}
+          style={styles.scrollView}
+          nestedScrollEnabled={true}
+          scrollEnabled={true}
+          bounces={true}
+          onTouchStart={handleScrollViewTouch}
+        >
+          <Animated.View style={contentAnimatedStyle}>
+            {/* Avatar 3D Premium avec Avatar LSF */}
+            <View style={styles.avatarContainer}>
+              <Animated.View style={[styles.avatarGlow, glowAnimatedStyle]} />
+              
+              {/* Avatar 3D LSF qui remplace l'icône utilisateur */}
+              {transcribedText && !isProcessing ? (
+                <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
+                  <SignLanguageAvatar
+                    isSigning={!!transcribedText && !isProcessing}
+                    signText={transcribedText}
+                    currentSign={currentSign}
+                    style={styles.avatar3DMain}
+                  />
+                </Animated.View>
+              ) : (
+                <Animated.View style={[styles.avatar, avatarAnimatedStyle]}>
+                  <LinearGradient 
+                    colors={["#146454", "#029ED6"]} 
+                    style={styles.avatarGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                   >
-                    <Text style={styles.signTranslationTitle}>Traduction LSF</Text>
-                    <Text style={styles.signTranslationText}>{signTranslation}</Text>
+                    <Ionicons name="person" size={60} color="#FFFFFF" />
+                  </LinearGradient>
+                  <Animated.View style={[styles.avatarPulse, pulseAnimatedStyle]} />
+                </Animated.View>
+              )}
+
+              {isProcessing && (
+                <View style={styles.processingIndicator}>
+                  <LinearGradient
+                    colors={["rgba(20, 100, 84, 0.15)", "rgba(2, 158, 214, 0.1)"]}
+                    style={styles.processingGradient}
+                  >
+                    <Animated.View style={styles.processingIcon}>
+                      <Ionicons name="sync" size={20} color="#146454" />
+                    </Animated.View>
+                    <Text style={styles.processingText}>Traduction en cours...</Text>
                   </LinearGradient>
                 </View>
               )}
-
-              <View style={styles.signTranslation}>
-                <Text style={styles.signText}>{signEmojis || "🤟 👋 ✋ 👍 🤝"}</Text>
-                <Text style={styles.signDescription}>Représentation en emojis</Text>
-              </View>
             </View>
-          ) : null}
 
-          {/* Contrôles d'enregistrement */}
-          <View style={styles.controlsContainer}>
-            {/* Ondes sonores animées */}
+            {/* Barre de progression */}
             {isRecording && (
-              <Animated.View style={[styles.soundWaves, waveAnimatedStyle]}>
-                {[...Array(7)].map((_, index) => (
-                  <Animated.View
-                    key={index}
-                    style={[
-                      styles.wave,
-                      {
-                        height: 15 + index * 8,
-                        backgroundColor: "#146454",
-                        opacity: interpolate(waveOpacity.value, [0, 1], [0.3, 1]),
-                      },
-                    ]}
-                  />
-                ))}
-              </Animated.View>
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <Animated.View style={[styles.progressFill, progressAnimatedStyle]} />
+                </View>
+                <Text style={styles.progressText}>{Math.round(confidence)}% de confiance</Text>
+              </View>
             )}
 
-            {/* Bouton micro premium */}
-            <Animated.View style={micAnimatedStyle}>
-              <TouchableOpacity
-                style={[styles.micButton, isRecording && styles.micButtonActive]}
-                onPress={handleRecordToggle}
-                activeOpacity={0.8}
-              >
+            {/* Texte transcrit */}
+            {transcribedText ? (
+              <View style={styles.textContainer}>
                 <LinearGradient
-                  colors={isRecording ? ["#FF4757", "#FF3742"] : ["#146454", "#029ED6"]}
-                  style={styles.micButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                  colors={["rgba(20, 100, 84, 0.08)", "rgba(2, 158, 214, 0.04)"]}
+                  style={styles.textGradient}
                 >
-                  <Ionicons name={isRecording ? "stop" : "mic"} size={40} color="#FFFFFF" />
+                  <Text style={styles.transcribedText}>{transcribedText}</Text>
+                  <View style={styles.confidenceIndicator}>
+                    <Ionicons name="checkmark-circle" size={16} color="#146454" />
+                    <Text style={styles.confidenceText}>{Math.round(confidence)}% de précision</Text>
+                  </View>
                 </LinearGradient>
-                {isRecording && <Animated.View style={[styles.pulseCircle, pulseAnimatedStyle]} />}
-              </TouchableOpacity>
-            </Animated.View>
 
-            <Text style={styles.instructionText}>
-              {isRecording ? "Parlez maintenant..." : "Appuyez pour commencer l'enregistrement"}
-            </Text>
-          </View>
+                {/* Traduction LSF */}
+                {signTranslation && (
+                  <View style={styles.signTranslationContainer}>
+                    <LinearGradient
+                      colors={["rgba(2, 158, 214, 0.08)", "rgba(20, 100, 84, 0.04)"]}
+                      style={styles.signTranslationGradient}
+                    >
+                      <Text style={styles.signTranslationTitle}>Traduction LSF</Text>
+                      <Text style={styles.signTranslationText}>{signTranslation}</Text>
+                    </LinearGradient>
+                  </View>
+                )}
 
-          {/* Sous-titres en temps réel */}
-          <View style={styles.subtitlesContainer}>
-            <Text style={styles.subtitlesTitle}>Sous-titres en temps réel</Text>
-            <LinearGradient 
-              colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} 
-              style={styles.subtitlesBox}
-            >
-              <Text style={styles.subtitlesText}>
-                {isRecording ? "Écoute en cours..." : transcribedText || "Aucun texte détecté"}
+                <View style={styles.signTranslation}>
+                  <Text style={styles.signText}>{signEmojis || "🤟 👋 ✋ 👍 🤝"}</Text>
+                  <Text style={styles.signDescription}>Représentation en emojis</Text>
+                </View>
+              </View>
+            ) : null}
+
+            {/* Contrôles d'enregistrement */}
+            <View style={styles.controlsContainer}>
+              {/* Ondes sonores animées */}
+              {isRecording && (
+                <Animated.View style={[styles.soundWaves, waveAnimatedStyle]}>
+                  {[...Array(7)].map((_, index) => (
+                    <Animated.View
+                      key={index}
+                      style={[
+                        styles.wave,
+                        {
+                          height: 15 + index * 8,
+                          backgroundColor: "#146454",
+                          opacity: interpolate(waveOpacity.value, [0, 1], [0.3, 1]),
+                        },
+                      ]}
+                    />
+                  ))}
+                </Animated.View>
+              )}
+
+              {/* Bouton micro premium */}
+              <Animated.View style={micAnimatedStyle}>
+                <TouchableOpacity
+                  style={[styles.micButton, isRecording && styles.micButtonActive]}
+                  onPress={handleRecordToggle}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={isRecording ? ["#FF4757", "#FF3742"] : ["#146454", "#029ED6"]}
+                    style={styles.micButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Ionicons name={isRecording ? "stop" : "mic"} size={40} color="#FFFFFF" />
+                  </LinearGradient>
+                  {isRecording && <Animated.View style={[styles.pulseCircle, pulseAnimatedStyle]} />}
+                </TouchableOpacity>
+              </Animated.View>
+
+              <Text style={styles.instructionText}>
+                {isRecording ? "Parlez maintenant..." : "Appuyez pour commencer l'enregistrement"}
               </Text>
-            </LinearGradient>
-          </View>
+            </View>
 
-          {/* Statistiques */}
-          <View style={styles.statsContainer}>
-            <Text style={styles.statsTitle}>Statistiques de session</Text>
-            <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.statGradient}>
-                  <Ionicons name="cloud-upload" size={24} color="#146454" />
-                  <Text style={styles.statNumber}>{uploadStats.totalUploads}</Text>
-                  <Text style={styles.statLabel}>Uploads</Text>
-                </LinearGradient>
-              </View>
-              <View style={styles.statCard}>
-                <LinearGradient colors={["rgba(2, 158, 214, 0.1)", "rgba(20, 100, 84, 0.05)"]} style={styles.statGradient}>
-                  <Ionicons name="checkmark-circle" size={24} color="#029ED6" />
-                  <Text style={styles.statNumber}>{Math.round(confidence)}%</Text>
-                  <Text style={styles.statLabel}>Précision</Text>
-                </LinearGradient>
-              </View>
-              <View style={styles.statCard}>
-                <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.statGradient}>
-                  <Ionicons name="mic" size={24} color="#146454" />
-                  <Text style={styles.statNumber}>{uploadStats.successfulUploads}</Text>
-                  <Text style={styles.statLabel}>Réussis</Text>
-                </LinearGradient>
+            {/* Sous-titres en temps réel */}
+            <View style={styles.subtitlesContainer}>
+              <Text style={styles.subtitlesTitle}>Sous-titres en temps réel</Text>
+              <LinearGradient 
+                colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} 
+                style={styles.subtitlesBox}
+              >
+                <Text style={styles.subtitlesText}>
+                  {isRecording ? "Écoute en cours..." : transcribedText || "Aucun texte détecté"}
+                </Text>
+              </LinearGradient>
+            </View>
+
+            {/* Statistiques */}
+            <View style={styles.statsContainer}>
+              <Text style={styles.statsTitle}>Statistiques de session</Text>
+              <View style={styles.statsGrid}>
+                <View style={styles.statCard}>
+                  <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.statGradient}>
+                    <Ionicons name="cloud-upload" size={24} color="#146454" />
+                    <Text style={styles.statNumber}>{uploadStats.totalUploads}</Text>
+                    <Text style={styles.statLabel}>Uploads</Text>
+                  </LinearGradient>
+                </View>
+                <View style={styles.statCard}>
+                  <LinearGradient colors={["rgba(2, 158, 214, 0.1)", "rgba(20, 100, 84, 0.05)"]} style={styles.statGradient}>
+                    <Ionicons name="checkmark-circle" size={24} color="#029ED6" />
+                    <Text style={styles.statNumber}>{Math.round(confidence)}%</Text>
+                    <Text style={styles.statLabel}>Précision</Text>
+                  </LinearGradient>
+                </View>
+                <View style={styles.statCard}>
+                  <LinearGradient colors={["rgba(20, 100, 84, 0.1)", "rgba(2, 158, 214, 0.05)"]} style={styles.statGradient}>
+                    <Ionicons name="mic" size={24} color="#146454" />
+                    <Text style={styles.statNumber}>{uploadStats.successfulUploads}</Text>
+                    <Text style={styles.statLabel}>Réussis</Text>
+                  </LinearGradient>
+                </View>
               </View>
             </View>
-          </View>
-        </Animated.View>
-      </ScrollView>
+          </Animated.View>
+        </ScrollView>
+      )}
     </View>
   )
 }
@@ -718,6 +1024,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 40,
+    flexGrow: 1,
   },
   header: {
     flexDirection: "row",
@@ -1083,6 +1390,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginLeft: 8,
+  },
+  openAIStatusContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 5,
+  },
+  openAIStatusGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(20, 100, 84, 0.1)",
+  },
+  openAIStatusText: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  quotaAdviceText: {
+    fontSize: 10,
+    color: "#6b7280",
+    textAlign: "center",
+    marginTop: 4,
+    fontStyle: "italic",
   },
   avatar3D: {
     width: 240,
