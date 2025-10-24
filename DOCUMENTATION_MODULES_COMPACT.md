@@ -175,3 +175,6 @@ Cette version est **optimisée pour PowerPoint** avec :
 - ✅ Script de présentation inclus
 
 
+
+
+

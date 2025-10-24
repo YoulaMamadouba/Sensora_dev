@@ -672,7 +672,6 @@ const styles = StyleSheet.create({
   },
   mainMetricCard: {
     borderRadius: 20,
-    overflow: "hidden",
     elevation: 12,
     shadowColor: "#146454",
     shadowOffset: { width: 0, height: 8 },
@@ -685,6 +684,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(20, 100, 84, 0.15)",
     backgroundColor: "#FFFFFF",
+    borderRadius: 20,
   },
   heartIcon: {
     width: 80,
@@ -737,7 +737,12 @@ const styles = StyleSheet.create({
   metricCard: {
     width: (width - 64) / 2,
     borderRadius: 16,
-    overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#146454",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    height: 120,
   },
   metricCardSelected: {
     elevation: 8,
@@ -757,6 +762,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
+    borderRadius: 16,
+    height: 120,
+    justifyContent: "center",
   },
   metricValue: {
     fontSize: 20,
@@ -860,7 +868,11 @@ const styles = StyleSheet.create({
     width: (width - 60) / 2,
     marginBottom: 16,
     borderRadius: 16,
-    overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#146454",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   cardGradient: {
     padding: 20,
@@ -868,6 +880,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(20, 100, 84, 0.2)",
     backgroundColor: "#FFFFFF",
+    borderRadius: 16,
     shadowColor: "#146454",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,

@@ -42,17 +42,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   // Synchroniser avec l'utilisateur Supabase si disponible
   useEffect(() => {
-    if (supabaseConfigured && supabaseAuthenticated && supabaseUser && userProfile) {
+    if (supabaseConfigured && supabaseAuthenticated && supabaseUser) {
+      console.log('🔄 Synchronisation utilisateur Supabase...')
+      console.log('👤 Supabase User:', supabaseUser)
+      console.log('📋 User Profile:', userProfile)
+      
       const mappedUser: User = {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
-        name: userProfile.full_name,
-        userType: userProfile.user_role === 'sourd' ? 'deaf' : 'hearing'
+        name: userProfile?.full_name || supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || supabaseUser.user_metadata?.given_name || supabaseUser.email?.split('@')[0] || 'Utilisateur',
+        userType: userProfile?.user_role === 'sourd' ? 'deaf' : 'hearing'
       }
+      
+      console.log('🔍 Détails du mapping utilisateur:', {
+        supabaseUserEmail: supabaseUser.email,
+        userProfileFullName: userProfile?.full_name,
+        userMetadataFullName: supabaseUser.user_metadata?.full_name,
+        userMetadataName: supabaseUser.user_metadata?.name,
+        finalMappedName: mappedUser.name,
+        userMetadataGivenName: supabaseUser.user_metadata?.given_name,
+        finalMappedName: mappedUser.name
+      })
+      
+      console.log('✅ Utilisateur mappé:', mappedUser)
       setUser(mappedUser)
       setUserType(mappedUser.userType)
     } else if (!supabaseAuthenticated) {
       // Déconnecté de Supabase, nettoyer l'état local
+      console.log('🧹 Nettoyage état utilisateur (déconnecté)')
       setUser(null)
     }
   }, [supabaseConfigured, supabaseAuthenticated, supabaseUser, userProfile])

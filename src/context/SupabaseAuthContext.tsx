@@ -47,22 +47,20 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
           const service = getSupabaseService()
           setSupabaseService(service)
           setIsConfigured(true)
-          
-          // Vérifier la session existante
+          // Récupérer session courante et profil
           const session = await service.getCurrentSession()
           if (session?.user) {
             setUser(session.user)
-            
-            // Charger le profil utilisateur
             const profile = await service.getUserProfile(session.user.id)
             setUserProfile(profile)
           }
-          
-          console.log('✅ Supabase Auth Context initialisé')
         } else {
-          console.warn('⚠️ Supabase non configuré - mode hors ligne')
+          console.warn('⚠️ Supabase non configuré - désactivé')
+          setSupabaseService(null)
           setIsConfigured(false)
         }
+        
+        console.log('✅ Supabase Auth Context initialisé')
       } catch (error) {
         console.error('❌ Erreur initialisation Supabase:', error)
         setIsConfigured(false)

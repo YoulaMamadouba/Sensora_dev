@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
   categoryCard: {
     flex: 1,
     borderRadius: 16,
-    overflow: "hidden",
+    height: 80,
   },
   categoryCardSelected: {
     elevation: 8,
@@ -668,6 +668,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
+    borderRadius: 16,
+    height: 80,
+    justifyContent: "center",
   },
   categoryText: {
     fontSize: 12,
@@ -687,7 +690,6 @@ const styles = StyleSheet.create({
   },
   courseCard: {
     borderRadius: 16,
-    overflow: "hidden",
     elevation: 8,
     shadowColor: "#146454",
     shadowOffset: { width: 0, height: 4 },
@@ -699,6 +701,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(20, 100, 84, 0.15)",
     backgroundColor: "#FFFFFF",
+    borderRadius: 16,
   },
   courseHeader: {
     flexDirection: "row",
@@ -775,7 +778,12 @@ const styles = StyleSheet.create({
   achievementCard: {
     width: (width - 64) / 2,
     borderRadius: 16,
-    overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#146454",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    height: 120,
   },
   achievementUnlocked: {
     elevation: 8,
@@ -795,6 +803,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
+    borderRadius: 16,
+    height: 120,
+    justifyContent: "center",
   },
   achievementIcon: {
     width: 40,

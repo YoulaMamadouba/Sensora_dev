@@ -239,7 +239,6 @@ const styles = StyleSheet.create({
   },
   userTypeContainer: {
     borderRadius: 25,
-    overflow: "hidden",
     elevation: 8,
     shadowColor: "#146454",
     shadowOffset: { width: 0, height: 4 },
@@ -251,6 +250,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 12,
+    borderRadius: 25,
   },
   userTypeText: {
     fontSize: 14,
@@ -275,7 +275,6 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     borderRadius: 16,
-    overflow: "hidden",
     elevation: 8,
     shadowColor: "#146454",
     shadowOffset: { width: 0, height: 4 },
@@ -288,6 +287,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(20, 100, 84, 0.15)",
     backgroundColor: "#FFFFFF",
+    borderRadius: 16,
   },
   statIcon: {
     width: 40,
@@ -316,7 +316,6 @@ const styles = StyleSheet.create({
   },
   menuItem: {
     borderRadius: 16,
-    overflow: "hidden",
     marginBottom: 12,
     elevation: 8,
     shadowColor: "#146454",
@@ -328,6 +327,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(20, 100, 84, 0.15)",
     backgroundColor: "#FFFFFF",
+    borderRadius: 16,
   },
   menuItemContent: {
     flexDirection: "row",
@@ -362,7 +362,6 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     borderRadius: 16,
-    overflow: "hidden",
     elevation: 8,
     shadowColor: "#146454",
     shadowOffset: { width: 0, height: 4 },
@@ -376,6 +375,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(20, 100, 84, 0.15)",
     backgroundColor: "#FFFFFF",
+    borderRadius: 16,
   },
   appLogo: {
     marginRight: 16,

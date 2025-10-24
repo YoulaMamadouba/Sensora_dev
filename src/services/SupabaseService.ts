@@ -332,7 +332,36 @@ class SupabaseService {
 
       if (uploadError) {
         console.error('❌ Erreur upload storage:', uploadError)
-        throw uploadError
+        // Essayer de créer le bucket s'il n'existe pas
+        if (uploadError.message?.includes('not found') || uploadError.message?.includes('bucket')) {
+          console.log('🔄 Tentative de création du bucket audio-recordings...')
+          const { error: createError } = await this.supabase.storage.createBucket('audio-recordings', {
+            public: true,
+            allowedMimeTypes: ['audio/m4a', 'audio/mp3', 'audio/wav'],
+            fileSizeLimit: 50 * 1024 * 1024 // 50MB
+          })
+          
+          if (createError) {
+            console.error('❌ Erreur création bucket:', createError)
+          } else {
+            console.log('✅ Bucket créé, nouvelle tentative d\'upload...')
+            // Réessayer l'upload
+            const { data: retryData, error: retryError } = await this.supabase.storage
+              .from('audio-recordings')
+              .upload(uniqueFileName, blob, {
+                contentType: mimeType,
+                upsert: false
+              })
+            
+            if (retryError) {
+              throw retryError
+            }
+            // Continuer avec les données de retry
+            uploadData = retryData
+          }
+        } else {
+          throw uploadError
+        }
       }
 
       console.log('✅ Fichier uploadé vers storage:', uploadData)
@@ -360,12 +389,7 @@ class SupabaseService {
 
       if (dbError) {
         console.error('❌ Erreur insertion base de données:', dbError)
-        // Essayer de supprimer le fichier du storage en cas d'échec
-        await this.supabase.storage
-          .from('audio-recordings')
-          .remove([uniqueFileName])
-          .catch(console.error)
-        throw dbError
+        throw new Error(`Erreur lors de l'enregistrement en base de données: ${dbError.message}`)
       }
 
       console.log('✅ Fichier audio uploadé avec succès et enregistré en base:', fileRecord)

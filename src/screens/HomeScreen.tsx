@@ -13,6 +13,7 @@ import Animated, {
   withSequence,
   withDelay,
   interpolate,
+  runOnJS,
 } from "react-native-reanimated"
 import { useAuth } from "../context/AuthContext"
 import { useNavigation } from "@react-navigation/native"
@@ -32,7 +33,7 @@ const HomeScreen: React.FC = () => {
   const quoteOpacity = useSharedValue(0)
   const notificationScale = useSharedValue(1)
 
-  useEffect(() => {
+  const startAnimations = () => {
     // Séquence d'animations d'entrée
     headerOpacity.value = withTiming(1, { duration: 800 })
     cardOpacity.value = withDelay(300, withTiming(1, { duration: 1000 }))
@@ -59,6 +60,15 @@ const HomeScreen: React.FC = () => {
       -1,
       true,
     )
+  }
+
+  useEffect(() => {
+    // Démarrer les animations après un court délai pour éviter les warnings
+    const timer = setTimeout(() => {
+      startAnimations()
+    }, 100)
+    
+    return () => clearTimeout(timer)
   }, [])
 
   const handleModulePress = (moduleName: string, screenName: string) => {
@@ -230,7 +240,7 @@ const HomeScreen: React.FC = () => {
             {modules.map((module, index) => (
               <Animated.View key={module.id} style={[styles.moduleCard, cardAnimatedStyle]}>
                 <TouchableOpacity
-                  style={styles.moduleCard}
+                  style={styles.moduleTouchable}
                   onPress={() => handleModulePress(module.id, module.screen)}
                   activeOpacity={0.8}
                 >
@@ -440,16 +450,23 @@ const styles = StyleSheet.create({
   },
   quoteContainer: {
     borderRadius: 20,
-    overflow: "hidden",
     marginHorizontal: 20,
-    marginTop: 10, // Ajouté pour plus d'espace
-    marginBottom: 10, // Ajouté pour plus d'espace
+    marginTop: 10,
+    marginBottom: 10,
+    shadowColor: "#146454",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   quoteSimple: {
     backgroundColor: "rgba(20, 100, 84, 0.15)",
-    borderRadius: 15,
+    borderRadius: 20,
     padding: 18,
-    flexDirection: "row", // Ajouté pour aligner horizontalement
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -481,7 +498,7 @@ const styles = StyleSheet.create({
   },
   moduleCard: {
     width: (width - 60) / 2,
-    height: 200,
+    minHeight: 200,
     marginBottom: 16,
     borderRadius: 16,
     backgroundColor: "#FFFFFF",
@@ -490,24 +507,27 @@ const styles = StyleSheet.create({
     shadowColor: "#146454",
     shadowOffset: {
       width: 0,
-      height: 3,
+      height: 4,
     },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 6,
-    overflow: "hidden",
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  moduleTouchable: {
+    flex: 1,
+    borderRadius: 16,
   },
   moduleGradient: {
     flex: 1,
     borderWidth: 1,
     borderColor: "rgba(20, 100, 84, 0.1)",
+    borderRadius: 16,
   },
   moduleContent: {
     flex: 1,
     padding: 16,
     justifyContent: "space-between",
     alignItems: "center",
-    height: "100%",
     minHeight: 200,
   },
   moduleIconContainer: {
@@ -540,15 +560,16 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   moduleDescription: {
-    fontSize: 15,
+    fontSize: 14,
     color: "#146454",
     opacity: 0.9,
-    lineHeight: 20,
+    lineHeight: 18,
     textAlign: "center",
     fontWeight: "500",
     marginBottom: 8,
     flex: 1,
     paddingHorizontal: 4,
+    maxHeight: 72, // Limite la hauteur pour éviter le débordement
   },
   moduleIndicator: {
     flexDirection: "row",
@@ -580,7 +601,7 @@ const styles = StyleSheet.create({
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 8,
   },
@@ -589,6 +610,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: "rgba(20, 100, 84, 0.1)",
+    borderRadius: 20,
   },
   statNumber: {
     fontSize: 24,
@@ -608,20 +630,21 @@ const styles = StyleSheet.create({
   quickActions: {
     flexDirection: "row",
     justifyContent: "space-between",
+    gap: 12,
   },
   quickAction: {
     flex: 1,
     marginHorizontal: 6,
-    borderRadius: 16,
-    overflow: "hidden",
+    borderRadius: 20,
+    height: 50,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 6,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
   quickActionGradient: {
     flexDirection: "row",
@@ -631,6 +654,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     width: "100%",
     height: "100%",
+    borderRadius: 20,
   },
   quickActionText: {
     fontSize: 12,

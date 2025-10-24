@@ -13,6 +13,7 @@ import {
   ScrollView,
   StatusBar,
   FlatList,
+  Linking,
 } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
@@ -78,15 +79,9 @@ const VoiceToSignModule: React.FC = () => {
 
   // Demander les permissions audio et tester la configuration
   useEffect(() => {
-    (async () => {
-      // Demander les permissions audio
-      const { status } = await Audio.requestPermissionsAsync()
-      if (status !== 'granted') {
-        Alert.alert('Permission refusée', 'L\'accès au microphone est nécessaire pour enregistrer l\'audio.')
-      }
-
-      // Tester la configuration OpenAI
+    const initializeModule = async () => {
       try {
+        // Tester la configuration OpenAI
         const isOpenAIConfigured = await openAIService.testConnection()
         if (!isOpenAIConfigured) {
           console.warn('⚠️ OpenAI non configuré ou non accessible')
@@ -96,11 +91,13 @@ const VoiceToSignModule: React.FC = () => {
           setOpenAIStatus('active')
         }
       } catch (error) {
-        console.warn('⚠️ Erreur test OpenAI:', error)
+        console.warn('⚠️ Erreur initialisation module:', error)
         setOpenAIStatus('unknown')
-        showOpenAINotification('Erreur configuration OpenAI - Mode simulation activé')
+        showOpenAINotification('Erreur configuration - Mode simulation activé')
       }
-    })()
+    }
+
+    initializeModule()
   }, [])
 
   // Animation d'entrée
@@ -144,10 +141,39 @@ const VoiceToSignModule: React.FC = () => {
     try {
       console.log('🎤 Début de l\'enregistrement...')
       
+      // Demander les permissions d'abord
+      const { status } = await Audio.requestPermissionsAsync()
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Microphone Requise',
+          'Sensora a besoin d\'accéder à votre microphone pour enregistrer votre voix et la traduire en langue des signes.\n\nVeuillez autoriser l\'accès au microphone dans les paramètres de votre appareil.',
+          [
+            { text: 'Annuler', style: 'cancel', onPress: () => {
+              console.log('❌ Permission refusée par l\'utilisateur')
+            }},
+            { text: 'Paramètres', onPress: () => {
+              console.log('🔧 Ouverture des paramètres...')
+              // Ouvrir les paramètres de l'appareil
+              if (Platform.OS === 'ios') {
+                Linking.openURL('app-settings:')
+              } else {
+                Linking.openSettings()
+              }
+            }}
+          ]
+        )
+        console.log('❌ Permission microphone refusée')
+        return
+      }
+      
+      console.log('✅ Permission microphone accordée')
+
       // Configurer l'audio
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
       })
 
       // Créer un nouvel enregistrement
@@ -162,7 +188,11 @@ const VoiceToSignModule: React.FC = () => {
       console.log('✅ Enregistrement démarré')
     } catch (err) {
       console.error('❌ Erreur lors du démarrage de l\'enregistrement:', err)
-      Alert.alert('Erreur', 'Impossible de démarrer l\'enregistrement')
+      Alert.alert(
+        'Erreur d\'enregistrement',
+        'Impossible de démarrer l\'enregistrement. Vérifiez que l\'application a accès au microphone dans les paramètres.',
+        [{ text: 'OK' }]
+      )
     }
   }
 
@@ -352,8 +382,11 @@ const VoiceToSignModule: React.FC = () => {
 
   const uploadAudioToSupabase = async (uri: string) => {
     try {
-      if (!supabaseService || !user) {
-        console.warn('⚠️ Service Supabase ou utilisateur non disponible')
+      console.log('🔍 Debug upload - user:', user)
+      console.log('🔍 Debug upload - supabaseService:', !!supabaseService)
+      
+      if (!supabaseService) {
+        console.warn('⚠️ Service Supabase non disponible')
         return null
       }
 
@@ -533,28 +566,15 @@ const VoiceToSignModule: React.FC = () => {
             <View style={styles.avatarContainer}>
               <Animated.View style={[styles.avatarGlow, glowAnimatedStyle]} />
               
-              {transcribedText && !isProcessing ? (
-                <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
-                  <SignLanguageAvatar
-                    isSigning={!!transcribedText && !isProcessing}
-                    signText={transcribedText}
-                    currentSign={currentSign}
-                    style={styles.avatar3DMain}
-                  />
-                </Animated.View>
-              ) : (
-                <Animated.View style={[styles.avatar, avatarAnimatedStyle]}>
-                  <LinearGradient 
-                    colors={["#146454", "#029ED6"]} 
-                    style={styles.avatarGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Ionicons name="person" size={60} color="#FFFFFF" />
-                  </LinearGradient>
-                  <Animated.View style={[styles.avatarPulse, pulseAnimatedStyle]} />
-                </Animated.View>
-              )}
+              {/* Avatar 3D LSF TOUJOURS AFFICHÉ */}
+              <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
+                <SignLanguageAvatar
+                  isSigning={!!transcribedText && !isProcessing}
+                  signText={transcribedText}
+                  currentSign={currentSign}
+                  style={styles.avatar3DMain}
+                />
+              </Animated.View>
 
               {isProcessing && (
                 <View style={styles.processingIndicator}>
@@ -829,29 +849,15 @@ const VoiceToSignModule: React.FC = () => {
             <View style={styles.avatarContainer}>
               <Animated.View style={[styles.avatarGlow, glowAnimatedStyle]} />
               
-              {/* Avatar 3D LSF qui remplace l'icône utilisateur */}
-              {transcribedText && !isProcessing ? (
-                <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
-                  <SignLanguageAvatar
-                    isSigning={!!transcribedText && !isProcessing}
-                    signText={transcribedText}
-                    currentSign={currentSign}
-                    style={styles.avatar3DMain}
-                  />
-                </Animated.View>
-              ) : (
-                <Animated.View style={[styles.avatar, avatarAnimatedStyle]}>
-                  <LinearGradient 
-                    colors={["#146454", "#029ED6"]} 
-                    style={styles.avatarGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Ionicons name="person" size={60} color="#FFFFFF" />
-                  </LinearGradient>
-                  <Animated.View style={[styles.avatarPulse, pulseAnimatedStyle]} />
-                </Animated.View>
-              )}
+              {/* Avatar 3D LSF TOUJOURS AFFICHÉ */}
+              <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
+                <SignLanguageAvatar
+                  isSigning={!!transcribedText && !isProcessing}
+                  signText={transcribedText}
+                  currentSign={currentSign}
+                  style={styles.avatar3DMain}
+                />
+              </Animated.View>
 
               {isProcessing && (
                 <View style={styles.processingIndicator}>
