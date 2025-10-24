@@ -242,6 +242,10 @@ const SignLanguageAvatar: React.FC<SignLanguageAvatarProps> = ({
 
   return (
     <View style={[styles.container, style]}>
+      {/* White overlay pendant que le modèle charge */}
+      {!glbLoaded && (
+        <View style={styles.loadingOverlay} />
+      )}
       <GLView
         style={styles.glView}
         onContextCreate={onContextCreate}
@@ -285,6 +289,11 @@ const styles = StyleSheet.create({
     bottom: 10,
     color: '#666',
     fontSize: 12,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'white',
+    zIndex: 1,
   },
 });
 
