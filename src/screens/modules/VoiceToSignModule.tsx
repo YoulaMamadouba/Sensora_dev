@@ -304,11 +304,7 @@ const VoiceToSignModule: React.FC = () => {
               
               // Fallback vers la transcription simulée avec contenu plus intelligent
               const fallbackTranscriptions = [
-                "Bonjour, comment allez-vous aujourd'hui ?",
-                "Je voudrais apprendre la langue des signes",
-                "Merci beaucoup pour votre aide",
-                "Pouvez-vous répéter s'il vous plaît ?",
-                "J'ai bien compris votre message"
+                "salut"
               ]
               const randomTranscription = fallbackTranscriptions[Math.floor(Math.random() * fallbackTranscriptions.length)]
               setTranscribedText(randomTranscription)
@@ -349,11 +345,7 @@ const VoiceToSignModule: React.FC = () => {
           
           // Fallback vers la transcription simulée avec contenu plus intelligent
           const fallbackTranscriptions = [
-            "Bonjour, comment allez-vous aujourd'hui ?",
-            "Je voudrais apprendre la langue des signes",
-            "Merci beaucoup pour votre aide",
-            "Pouvez-vous répéter s'il vous plaît ?",
-            "J'ai bien compris votre message"
+            "salut"
           ]
           const randomTranscription = fallbackTranscriptions[Math.floor(Math.random() * fallbackTranscriptions.length)]
           setTranscribedText(randomTranscription)
@@ -562,11 +554,11 @@ const VoiceToSignModule: React.FC = () => {
     switch (item.type) {
       case 'avatar':
         return (
-          <Animated.View style={contentAnimatedStyle}>
-            <View style={styles.avatarContainer}>
-              <Animated.View style={[styles.avatarGlow, glowAnimatedStyle]} />
-              
-              {/* Avatar 3D LSF TOUJOURS AFFICHÉ */}
+          <View style={styles.avatarContainer}>
+            <Animated.View style={[styles.avatarGlow, glowAnimatedStyle]} />
+            
+            {/* Avatar 3D LSF - only show when text is transcribed */}
+            {transcribedText && !isProcessing ? (
               <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
                 <SignLanguageAvatar
                   isSigning={!!transcribedText && !isProcessing}
@@ -575,22 +567,22 @@ const VoiceToSignModule: React.FC = () => {
                   style={styles.avatar3DMain}
                 />
               </Animated.View>
+            ) : null}
 
-              {isProcessing && (
-                <View style={styles.processingIndicator}>
-                  <LinearGradient
-                    colors={["rgba(20, 100, 84, 0.15)", "rgba(2, 158, 214, 0.1)"]}
-                    style={styles.processingGradient}
-                  >
-                    <Animated.View style={styles.processingIcon}>
-                      <Ionicons name="sync" size={20} color="#146454" />
-                    </Animated.View>
-                    <Text style={styles.processingText}>Traduction en cours...</Text>
-                  </LinearGradient>
-                </View>
-              )}
-            </View>
-          </Animated.View>
+            {isProcessing && (
+              <View style={styles.processingIndicator}>
+                <LinearGradient
+                  colors={["rgba(20, 100, 84, 0.15)", "rgba(2, 158, 214, 0.1)"]}
+                  style={styles.processingGradient}
+                >
+                  <Animated.View style={styles.processingIcon}>
+                    <Ionicons name="sync" size={20} color="#146454" />
+                  </Animated.View>
+                  <Text style={styles.processingText}>Traduction en cours...</Text>
+                </LinearGradient>
+              </View>
+            )}
+          </View>
         )
       case 'progress':
         return isRecording ? (
@@ -849,15 +841,17 @@ const VoiceToSignModule: React.FC = () => {
             <View style={styles.avatarContainer}>
               <Animated.View style={[styles.avatarGlow, glowAnimatedStyle]} />
               
-              {/* Avatar 3D LSF TOUJOURS AFFICHÉ */}
-              <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
-                <SignLanguageAvatar
-                  isSigning={!!transcribedText && !isProcessing}
-                  signText={transcribedText}
-                  currentSign={currentSign}
-                  style={styles.avatar3DMain}
-                />
-              </Animated.View>
+              {/* Avatar 3D LSF - only show when text is transcribed */}
+              {transcribedText && !isProcessing ? (
+                <Animated.View style={[styles.avatar3D, avatarAnimatedStyle]}>
+                  <SignLanguageAvatar
+                    isSigning={!!transcribedText && !isProcessing}
+                    signText={transcribedText}
+                    currentSign={currentSign}
+                    style={styles.avatar3DMain}
+                  />
+                </Animated.View>
+              ) : null}
 
               {isProcessing && (
                 <View style={styles.processingIndicator}>
@@ -1429,15 +1423,9 @@ const styles = StyleSheet.create({
     position: "relative",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFE6E6", // Temporaire - rose clair pour debug
-    borderWidth: 2,
-    borderColor: "#FF6B6B",
-    borderRadius: 8,
-    overflow: "hidden",
+    backgroundColor: "transparent",
   },
   avatar3DMain: {
-    width: 240,
-    height: 240,
     transform: [{ scale: 1.2 }],
     backgroundColor: 'transparent',
   },
