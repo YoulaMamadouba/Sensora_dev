@@ -1429,9 +1429,15 @@ const styles = StyleSheet.create({
     position: "relative",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "transparent",
+    backgroundColor: "#FFE6E6", // Temporaire - rose clair pour debug
+    borderWidth: 2,
+    borderColor: "#FF6B6B",
+    borderRadius: 8,
+    overflow: "hidden",
   },
   avatar3DMain: {
+    width: 240,
+    height: 240,
     transform: [{ scale: 1.2 }],
     backgroundColor: 'transparent',
   },
