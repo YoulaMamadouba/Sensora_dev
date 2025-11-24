@@ -82,11 +82,11 @@ const ProfileScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
             <LinearGradient colors={["#146454", "#029ED6"]} style={styles.avatar}>
-              <Text style={styles.avatarText}>{user?.name?.charAt(0).toUpperCase() || "U"}</Text>
+              <Text style={styles.avatarText}>{user?.name?.charAt(0).toUpperCase() || "Y"}</Text>
             </LinearGradient>
           </View>
 
-          <Text style={styles.userName}>{user?.name || "Utilisateur"}</Text>
+          <Text style={styles.userName}>{user?.name || "Youla Mamadouba"}</Text>
           <Text style={styles.userEmail}>{user?.email}</Text>
 
           <View style={styles.userTypeContainer}>

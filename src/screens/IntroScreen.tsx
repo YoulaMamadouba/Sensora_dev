@@ -204,52 +204,31 @@ const IntroScreen: React.FC = () => {
             </View>
             
             <Animated.View style={[styles.carousel, carouselAnimatedStyle]}>
-              {/* Slide principal avec effet 3D */}
+              {/* Image du slide */}
               <View style={styles.slideContainer}>
                 <Image 
                   source={{ uri: features[currentSlide].image }} 
                   style={styles.featureImage}
                   resizeMode="cover"
                 />
-                
-                {/* Overlay avec gradient moderne */}
-                                  <LinearGradient
-                    colors={["transparent", "rgba(255, 255, 255, 0.3)", "rgba(255, 255, 255, 0.9)"]}
-                    style={styles.slideGradient}
-                  />
-                
-                {/* Contenu du slide */}
-                <View style={styles.slideContent}>
-                  {/* Icône flottante avec glow */}
-                  <View style={styles.iconContainer}>
-                    <View style={styles.iconGlow} />
-                    <View style={styles.iconBackground}>
-                      <Ionicons name={features[currentSlide].icon as any} size={36} color="#FFFFFF" />
-                    </View>
+              </View>
+
+              {/* Contenu du slide après l'image */}
+              <View style={styles.slideContent}>
+                {/* Icône flottante avec glow */}
+                <View style={styles.iconContainer}>
+                  <View style={styles.iconGlow} />
+                  <View style={styles.iconBackground}>
+                    <Ionicons name={features[currentSlide].icon as any} size={36} color="#FFFFFF" />
                   </View>
-                  
-                  {/* Titre avec effet de texte */}
-                  <Text style={styles.slideTitle}>{features[currentSlide].title}</Text>
-                  <Text style={styles.slideDescription}>{features[currentSlide].description}</Text>
                 </View>
+                
+                {/* Titre avec effet de texte */}
+                <Text style={styles.slideTitle}>{features[currentSlide].title}</Text>
+                <Text style={styles.slideDescription}>{features[currentSlide].description}</Text>
               </View>
 
-              {/* Indicateurs de progression modernes */}
-              <View style={styles.progressContainer}>
-                {features.map((_, index) => (
-                  <View key={index} style={styles.progressItem}>
-                    <View
-                      style={[
-                        styles.progressBar,
-                        index === currentSlide && styles.progressBarActive
-                      ]}
-                    />
-                    <Text style={styles.progressText}>{index + 1}</Text>
-                  </View>
-                ))}
-              </View>
-
-                            {/* Contrôles de navigation innovants */}
+              {/* Contrôles de navigation innovants */}
               <View style={styles.navigationContainer}>
                 {/* Flèche de retour uniquement */}
                 {currentSlide > 0 && (
@@ -543,6 +522,15 @@ const styles = StyleSheet.create({
   iconContainer: {
     marginBottom: 15,
   },
+  iconGlow: {
+    position: "absolute",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(0, 224, 184, 0.3)",
+    top: -10,
+    left: -10,
+  },
   iconBackground: {
     width: 60,
     height: 60,
@@ -672,22 +660,10 @@ const styles = StyleSheet.create({
   },
   // Nouveaux styles pour le design innovant
   slideContent: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     padding: 25,
     alignItems: "center",
-    zIndex: 3,
-  },
-  iconGlow: {
-    position: "absolute",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(0, 224, 184, 0.3)",
-    top: -10,
-    left: -10,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
   },
   progressContainer: {
     flexDirection: "row",

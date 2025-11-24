@@ -8,12 +8,10 @@ export default function Page() {
         <Text style={styles.title}>Sensora</Text>
         <Text style={styles.subtitle}>Application de communication accessible</Text>
       </View>
-      
       <View style={styles.content}>
         <Text style={styles.info}>
           Bienvenue dans Sensora, votre application de communication accessible.
         </Text>
-        
         <View style={styles.features}>
           <Text style={styles.featureTitle}>Fonctionnalités :</Text>
           <Text style={styles.feature}>• Traduction en temps réel</Text>
@@ -21,7 +19,6 @@ export default function Page() {
           <Text style={styles.feature}>• Interface adaptée</Text>
           <Text style={styles.feature}>• Support multilingue</Text>
         </View>
-        
         <Text style={styles.mobileNote}>
           💡 Pour une expérience complète, utilisez Expo Go sur votre téléphone mobile.
         </Text>

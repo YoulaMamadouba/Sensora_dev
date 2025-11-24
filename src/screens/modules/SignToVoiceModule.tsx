@@ -2,9 +2,12 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, StatusBar } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, StatusBar, Platform } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
+import { CameraView, useCameraPermissions } from 'expo-camera'
+import { Audio } from 'expo-av'
+import * as Speech from 'expo-speech'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -23,6 +26,9 @@ import SignLanguageAvatar from "../../components/SignLanguageAvatar"
 
 const { width, height } = Dimensions.get("window")
 
+// Déclaration des types Web Speech API
+declare const window: any
+
 const SignToVoiceModule: React.FC = () => {
   const navigation = useNavigation()
   const [isDetecting, setIsDetecting] = useState(false)
@@ -31,6 +37,20 @@ const SignToVoiceModule: React.FC = () => {
   const [confidence, setConfidence] = useState(0)
   const [currentSign, setCurrentSign] = useState("")
   const [detectionMode, setDetectionMode] = useState<"camera" | "manual">("camera")
+  
+  // États pour la simulation réaliste
+  const [permission, requestPermission] = useCameraPermissions()
+  const [isRecording, setIsRecording] = useState(false)
+  const [sound, setSound] = useState<Audio.Sound | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [simulationTexts] = useState([
+    "Salut ! Comment vas-tu ?",
+    "Bonjour, ça va bien ?",
+    "Hello, comment allez-vous ?",
+    "Salut, tout va bien ?"
+  ])
+  const [currentSimulationIndex, setCurrentSimulationIndex] = useState(0)
+  const [detectedEmojis, setDetectedEmojis] = useState("")
 
   // Animations values
   const handScale = useSharedValue(1)
@@ -44,12 +64,36 @@ const SignToVoiceModule: React.FC = () => {
   const cameraRotation = useSharedValue(0)
   const detectionFrameScale = useSharedValue(1)
 
+  // Demander les permissions caméra au démarrage
+  useEffect(() => {
+    const requestCameraPermission = async () => {
+      try {
+        if (!permission?.granted) {
+          const result = await requestPermission()
+          console.log('Permission caméra:', result)
+        }
+      } catch (error) {
+        console.log('Erreur permission caméra:', error)
+      }
+    }
+    requestCameraPermission()
+  }, [permission, requestPermission])
+
   // Animation d'entrée
   useEffect(() => {
     headerOpacity.value = withTiming(1, { duration: 800 })
     contentOpacity.value = withDelay(300, withTiming(1, { duration: 1000 }))
     backgroundScale.value = withSpring(1, { damping: 15, stiffness: 100 })
   }, [])
+
+  // Cleanup audio resources
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync().catch(console.error)
+      }
+    }
+  }, [sound])
 
   useEffect(() => {
     if (isDetecting) {
@@ -127,11 +171,86 @@ const SignToVoiceModule: React.FC = () => {
     }
   }, [isDetecting])
 
-  const handleDetectionToggle = () => {
+  // Fonction pour jouer le son de l'avatar avec le texte détecté
+  const playAvatarSound = async () => {
+    try {
+      if (sound) {
+        await sound.unloadAsync()
+      }
+
+      // Vérifier si on est sur web pour utiliser Web Speech API
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        console.log('🔊 Utilisation de Web Speech API pour prononcer:', detectedSigns)
+        
+        // Arrêter toute synthèse en cours
+        window.speechSynthesis.cancel()
+        
+        // Créer une nouvelle synthèse vocale
+        const utterance = new (window as any).SpeechSynthesisUtterance(detectedSigns) as any
+        utterance.lang = 'fr-FR'
+        utterance.rate = 1.0
+        utterance.pitch = 1.0
+        utterance.volume = 0.8
+
+        // Gérer les événements
+        utterance.onstart = () => {
+          console.log('🎤 Lecture vocale démarrée')
+          setIsPlaying(true)
+        }
+
+        utterance.onend = () => {
+          console.log('✅ Lecture vocale terminée')
+          setIsPlaying(false)
+        }
+
+        utterance.onerror = (event: any) => {
+          console.error('❌ Erreur lecture vocale:', event)
+          setIsPlaying(false)
+        }
+
+        // Lancer la synthèse vocale
+        window.speechSynthesis.speak(utterance)
+      } else {
+        // Mode mobile avec expo-speech
+        console.log('📱 Mode mobile - utilisation de expo-speech')
+        
+        try {
+          setIsPlaying(true)
+          
+          Speech.speak(detectedSigns, {
+            language: 'fr-FR',
+            pitch: 1.0,
+            rate: 1.0,
+            onDone: () => {
+              console.log('✅ Synthèse vocale mobile terminée')
+              setIsPlaying(false)
+            },
+            onStopped: () => {
+              console.log('⏹️ Synthèse vocale mobile arrêtée')
+              setIsPlaying(false)
+            },
+            onError: (error: any) => {
+              console.error('❌ Erreur synthèse vocale mobile:', error)
+              setIsPlaying(false)
+            }
+          })
+        } catch (speechError) {
+          console.error('❌ Erreur lors de la synthèse vocale:', speechError)
+          setIsPlaying(false)
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la lecture du son:', error)
+      setIsPlaying(false)
+    }
+  }
+
+  const handleDetectionToggle = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
     if (!isDetecting) {
       setIsDetecting(true)
+      setIsRecording(true)
       setConfidence(0)
       
       // Simulation de détection avec progression
@@ -147,17 +266,29 @@ const SignToVoiceModule: React.FC = () => {
 
       setTimeout(() => {
         setIsDetecting(false)
+        setIsRecording(false)
         setIsProcessing(true)
         clearInterval(progressInterval)
         
-        setTimeout(() => {
-          setDetectedSigns("Bonjour, comment allez-vous ?")
+        setTimeout(async () => {
+          // Générer un texte aléatoire de la simulation
+          const randomText = simulationTexts[currentSimulationIndex]
+          setDetectedSigns(randomText)
+          setCurrentSimulationIndex((prev) => (prev + 1) % simulationTexts.length)
           setIsProcessing(false)
           setConfidence(95)
+          
+          // Générer les emojis correspondants aux signes détectés
+          const emojis = generateSignEmojis(randomText)
+          setDetectedEmojis(emojis)
+          
+          // Faire parler l'avatar avec du son
+          await playAvatarSound()
         }, 2000)
       }, 3000)
     } else {
       setIsDetecting(false)
+      setIsRecording(false)
     }
   }
 
@@ -169,6 +300,64 @@ const SignToVoiceModule: React.FC = () => {
   const handleModeSwitch = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     setDetectionMode(prev => prev === "camera" ? "manual" : "camera")
+  }
+
+  // Fonction pour générer les emojis des signes détectés
+  const generateSignEmojis = (text: string) => {
+    const signMapping: { [key: string]: string } = {
+      'salut': '👋',
+      'bonjour': '👋',
+      'hello': '👋',
+      'comment': '🤔',
+      'vas': '🚶',
+      'tu': '👤',
+      'bien': '👍',
+      'ça': '👌',
+      'va': '🚶',
+      'tout': '🤲',
+      'allez': '🚶',
+      'vous': '👥',
+      'merci': '🙏',
+      'oui': '👍',
+      'non': '👎',
+      'manger': '🍽️',
+      'boire': '🥤',
+      'dormir': '😴',
+      'travail': '💼',
+      'famille': '👨‍👩‍👧‍👦',
+      'ami': '🤝',
+      'amour': '❤️',
+      'temps': '⏰',
+      'jour': '☀️',
+      'nuit': '🌙',
+      'eau': '💧',
+      'pain': '🍞',
+      'maison': '🏠',
+      'voiture': '🚗',
+      'livre': '📚',
+      'musique': '🎵',
+      'sport': '⚽',
+      'école': '🎓',
+      'hôpital': '🏥',
+      'magasin': '🛒'
+    }
+
+    const words = text.toLowerCase().split(' ')
+    const emojis: string[] = []
+    
+    words.forEach(word => {
+      const cleanWord = word.replace(/[.,!?]/g, '')
+      if (signMapping[cleanWord]) {
+        emojis.push(signMapping[cleanWord])
+      }
+    })
+
+    // Ajouter des emojis génériques si aucun mapping n'est trouvé
+    if (emojis.length === 0) {
+      emojis.push('🤟', '👋', '✋', '👍', '🤝')
+    }
+
+    return emojis.join(' ')
   }
 
   const handAnimatedStyle = useAnimatedStyle(() => ({
@@ -217,7 +406,6 @@ const SignToVoiceModule: React.FC = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
       {/* Background animé */}
       <Animated.View style={[styles.backgroundGradient, backgroundAnimatedStyle]}>
         <LinearGradient 
@@ -244,6 +432,7 @@ const SignToVoiceModule: React.FC = () => {
         showsVerticalScrollIndicator={false} 
         contentContainerStyle={styles.scrollContent}
         style={styles.scrollView}
+        nestedScrollEnabled={true}
       >
         <Animated.View style={contentAnimatedStyle}>
           {/* Mode de détection */}
@@ -281,20 +470,53 @@ const SignToVoiceModule: React.FC = () => {
             
             {detectionMode === "camera" ? (
               <Animated.View style={[styles.cameraView, cameraAnimatedStyle]}>
-                <LinearGradient 
-                  colors={["rgba(2, 158, 214, 0.1)", "rgba(20, 100, 84, 0.05)"]} 
-                  style={styles.cameraGradient}
-                >
-                  <Ionicons name="videocam" size={60} color="#029ED6" />
-                  <Text style={styles.cameraText}>Zone de détection</Text>
-                  
-                  {isDetecting && (
-                    <Animated.View style={[styles.detectionFrame, detectionFrameAnimatedStyle]}>
-                      <View style={styles.frameBorder} />
-                      <Text style={styles.detectionText}>Analyse en cours...</Text>
-                    </Animated.View>
-                  )}
-                </LinearGradient>
+                {permission?.granted ? (
+                  <View style={styles.cameraContainer}>
+                    <CameraView
+                      style={styles.camera}
+                      facing="front"
+                    >
+                      {/* Indicateur de caméra active */}
+                      <View style={styles.cameraActiveIndicator}>
+                        <View style={styles.cameraActiveDot} />
+                        <Text style={styles.cameraActiveText}>Caméra active</Text>
+                      </View>
+                      
+                      {isRecording && (
+                        <Animated.View style={[styles.recordingOverlay, detectionFrameAnimatedStyle]}>
+                          <View style={styles.recordingIndicator}>
+                            <View style={styles.recordingDot} />
+                            <Text style={styles.recordingText}>Enregistrement...</Text>
+                          </View>
+                          <View style={styles.detectionFrame}>
+                            <View style={styles.frameBorder} />
+                            <Text style={styles.detectionText}>Analyse des signes...</Text>
+                          </View>
+                        </Animated.View>
+                      )}
+                    </CameraView>
+                  </View>
+                ) : (
+                  <LinearGradient 
+                    colors={["rgba(2, 158, 214, 0.1)", "rgba(20, 100, 84, 0.05)"]} 
+                    style={styles.cameraGradient}
+                  >
+                    <Ionicons name="videocam" size={60} color="#029ED6" />
+                    <Text style={styles.cameraText}>Permission caméra requise</Text>
+                    <TouchableOpacity 
+                      style={styles.permissionButton}
+                      onPress={() => {
+                        try {
+                          requestPermission()
+                        } catch (error) {
+                          console.log('Erreur lors de la demande de permission:', error)
+                        }
+                      }}
+                    >
+                      <Text style={styles.permissionButtonText}>Autoriser la caméra</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                )}
               </Animated.View>
             ) : (
               <Animated.View style={[styles.handIcon, handAnimatedStyle]}>
@@ -320,6 +542,14 @@ const SignToVoiceModule: React.FC = () => {
                   style={styles.avatar3D}
                 />
                 <Text style={styles.avatarDescription}>Simulation 3D des signes détectés</Text>
+                
+                {/* Emojis des signes détectés */}
+                {detectedEmojis && (
+                  <View style={styles.signEmojisContainer}>
+                    <Text style={styles.signEmojisTitle}>Signes détectés :</Text>
+                    <Text style={styles.signEmojis}>{detectedEmojis}</Text>
+                  </View>
+                )}
               </View>
             )}
 
@@ -363,12 +593,22 @@ const SignToVoiceModule: React.FC = () => {
               </LinearGradient>
 
               <View style={styles.voiceOutput}>
-                <TouchableOpacity style={styles.playButton} activeOpacity={0.8}>
-                  <LinearGradient colors={["#029ED6", "#146454"]} style={styles.playButtonGradient}>
-                    <Ionicons name="volume-high" size={24} color="#FFFFFF" />
+                <TouchableOpacity 
+                  style={styles.playButton} 
+                  activeOpacity={0.8}
+                  onPress={playAvatarSound}
+                  disabled={isPlaying}
+                >
+                  <LinearGradient 
+                    colors={isPlaying ? ["#999", "#666"] : ["#029ED6", "#146454"]} 
+                    style={styles.playButtonGradient}
+                  >
+                    <Ionicons name={isPlaying ? "volume-high" : "play"} size={24} color="#FFFFFF" />
                   </LinearGradient>
                 </TouchableOpacity>
-                <Text style={styles.voiceDescription}>Écouter la traduction</Text>
+                <Text style={styles.voiceDescription}>
+                  {isPlaying ? "Lecture..." : "Écouter la traduction"}
+                </Text>
               </View>
             </View>
           ) : null}
@@ -386,7 +626,7 @@ const SignToVoiceModule: React.FC = () => {
                       {
                         height: 15 + index * 8,
                         backgroundColor: "#029ED6",
-                        opacity: interpolate(waveScale.value, [0, 1], [0.3, 1]),
+                        opacity: 0.3 + (index * 0.1),
                       },
                     ]}
                   />
@@ -482,9 +722,11 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    maxHeight: height - 120,
   },
   scrollContent: {
     paddingBottom: 40,
+    flexGrow: 1,
   },
   header: {
     flexDirection: "row",
@@ -581,8 +823,8 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   cameraView: {
-    width: 160,
-    height: 160,
+    width: 200,
+    height: 200,
     borderRadius: 20,
     overflow: "hidden",
     position: "relative",
@@ -591,6 +833,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
+    borderWidth: 3,
+    borderColor: "#029ED6",
   },
   cameraGradient: {
     flex: 1,
@@ -915,6 +1159,105 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     textAlign: "center",
     fontWeight: "500",
+  },
+  signEmojisContainer: {
+    marginTop: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: "rgba(2, 158, 214, 0.1)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(2, 158, 214, 0.2)",
+  },
+  signEmojisTitle: {
+    fontSize: 14,
+    color: "#146454",
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  signEmojis: {
+    fontSize: 24,
+    textAlign: "center",
+    lineHeight: 32,
+  },
+  camera: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  recordingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recordingIndicator: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
+    marginRight: 8,
+  },
+  recordingText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cameraContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  permissionButton: {
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#029ED6',
+    borderRadius: 8,
+  },
+  permissionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cameraActiveIndicator: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 255, 0, 0.8)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  cameraActiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
+    marginRight: 6,
+  },
+  cameraActiveText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
   },
 })
 

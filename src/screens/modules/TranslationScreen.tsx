@@ -342,7 +342,6 @@ const TranslationScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
       {/* Background animé */}
       <Animated.View style={[styles.backgroundGradient, backgroundAnimatedStyle]}>
         <LinearGradient 

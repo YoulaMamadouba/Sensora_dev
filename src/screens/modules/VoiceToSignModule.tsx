@@ -638,7 +638,7 @@ const VoiceToSignModule: React.FC = () => {
                       {
                         height: 15 + index * 8,
                         backgroundColor: "#146454",
-                        opacity: interpolate(waveOpacity.value, [0, 1], [0.3, 1]),
+                        opacity: 0.3 + (index * 0.1),
                       },
                     ]}
                   />
@@ -720,7 +720,6 @@ const VoiceToSignModule: React.FC = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
       {/* Background animé */}
       <Animated.View style={[styles.backgroundGradient, backgroundAnimatedStyle]}>
         <LinearGradient 
@@ -826,16 +825,22 @@ const VoiceToSignModule: React.FC = () => {
           scrollEnabled={true}
           bounces={true}
         />
-      ) : (
-        <ScrollView 
-          showsVerticalScrollIndicator={false} 
-          contentContainerStyle={styles.scrollContent}
-          style={styles.scrollView}
-          nestedScrollEnabled={true}
-          scrollEnabled={true}
-          bounces={true}
-          onTouchStart={handleScrollViewTouch}
-        >
+      ) : (() => {
+        const Container = Platform.OS === 'web' ? View : ScrollView
+        const containerProps = Platform.OS === 'web' 
+          ? { style: styles.webScrollContainer }
+          : {
+              showsVerticalScrollIndicator: false,
+              contentContainerStyle: styles.scrollContent,
+              style: styles.scrollView,
+              nestedScrollEnabled: true,
+              scrollEnabled: true,
+              bounces: true,
+              onTouchStart: handleScrollViewTouch
+            }
+        
+        return (
+          <Container {...containerProps}>
           <Animated.View style={contentAnimatedStyle}>
             {/* Avatar 3D Premium avec Avatar LSF */}
             <View style={styles.avatarContainer}>
@@ -925,7 +930,7 @@ const VoiceToSignModule: React.FC = () => {
                         {
                           height: 15 + index * 8,
                           backgroundColor: "#146454",
-                          opacity: interpolate(waveOpacity.value, [0, 1], [0.3, 1]),
+                          opacity: 0.3 + (index * 0.1),
                         },
                       ]}
                     />
@@ -998,8 +1003,9 @@ const VoiceToSignModule: React.FC = () => {
               </View>
             </View>
           </Animated.View>
-        </ScrollView>
-      )}
+          </Container>
+        )
+      })()}
     </View>
   )
 }
@@ -1022,8 +1028,15 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  webScrollContainer: {
+    flex: 1,
+    overflow: 'auto' as any,
+    height: '100vh' as any,
+    maxHeight: '100vh' as any,
+  },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 150,
+    minHeight: Dimensions.get("window").height + 400,
     flexGrow: 1,
   },
   header: {

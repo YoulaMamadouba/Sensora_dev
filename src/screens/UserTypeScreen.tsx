@@ -80,14 +80,6 @@ const UserTypeScreen = () => {
 
   return (
     <LinearGradient colors={["#FFFFFF", "#F1F9F9", "#E8F6F9"]} style={styles.container}>
-      {/* Thème innovant : Inclusion universelle */}
-      <View style={styles.backgroundPatterns}>
-        <View style={styles.universalSigns} />
-        <View style={styles.bridgeElements} />
-        <View style={styles.harmonyNodes} />
-        <View style={styles.connectionPaths} />
-        <View style={styles.inclusionSpheres} />
-      </View>
 
       <Animated.View style={[styles.header, titleAnimatedStyle]}>
         <Text style={styles.welcomeText}>Choisissez votre profil</Text>
@@ -209,17 +201,17 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "100%",
-    height: 200,
+    height: 220,
     backgroundColor: "#FFFFFF",
-    borderRadius: 25,
+    borderRadius: 30,
     borderWidth: 2,
-    borderColor: "rgba(20, 100, 84, 0.3)",
+    borderColor: "rgba(20, 100, 84, 0.15)",
     overflow: "hidden",
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    elevation: 12,
+    shadowColor: "#146454",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
   },
   cardContent: {
     flex: 1,
@@ -228,21 +220,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(20, 100, 84, 0.1)",
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "rgba(20, 100, 84, 0.08)",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 24,
     borderWidth: 2,
-    borderColor: "rgba(20, 100, 84, 0.3)",
+    borderColor: "rgba(20, 100, 84, 0.2)",
+    elevation: 4,
+    shadowColor: "#146454",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 22,
+    fontWeight: "700",
     color: "#146454",
     textAlign: "center",
+    letterSpacing: 0.5,
   },
   footer: {
     alignItems: "center",
@@ -255,69 +253,6 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     textAlign: "center",
     lineHeight: 20,
-  },
-  // Thème innovant : Inclusion universelle
-  backgroundPatterns: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    zIndex: 1,
-    pointerEvents: "none",
-  },
-  universalSigns: {
-    position: "absolute",
-    top: "8%",
-    left: "10%",
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "rgba(2, 158, 214, 0.08)",
-    borderWidth: 2,
-    borderColor: "rgba(2, 158, 214, 0.2)",
-    pointerEvents: "none",
-  },
-  bridgeElements: {
-    position: "absolute",
-    top: "15%",
-    right: "12%",
-    width: 120,
-    height: 3,
-    backgroundColor: "rgba(20, 100, 84, 0.06)",
-    borderRadius: 1.5,
-    transform: [{ rotate: "20deg" }],
-    pointerEvents: "none",
-  },
-  harmonyNodes: {
-    position: "absolute",
-    bottom: "30%",
-    left: "8%",
-    width: 20,
-    height: 20,
-    backgroundColor: "rgba(2, 158, 214, 0.1)",
-    borderRadius: 10,
-    pointerEvents: "none",
-  },
-  connectionPaths: {
-    position: "absolute",
-    bottom: "25%",
-    right: "10%",
-    width: 100,
-    height: 4,
-    backgroundColor: "rgba(20, 100, 84, 0.05)",
-    borderRadius: 2,
-    transform: [{ rotate: "-15deg" }],
-    pointerEvents: "none",
-  },
-  inclusionSpheres: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: "rgba(20, 100, 84, 0.03)",
-    transform: [{ translateX: -75 }, { translateY: -75 }],
-    pointerEvents: "none",
   },
 })
 

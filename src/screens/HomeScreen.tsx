@@ -211,13 +211,13 @@ const HomeScreen: React.FC = () => {
         <Animated.View style={[styles.userSection, headerAnimatedStyle]}>
           <Animated.View style={[styles.avatarContainer, avatarAnimatedStyle]}>
             <LinearGradient colors={["#146454", "#029ED6"]} style={styles.avatar}>
-              <Text style={styles.avatarText}>{user?.name?.charAt(0).toUpperCase() || "U"}</Text>
+              <Text style={styles.avatarText}>{user?.name?.charAt(0).toUpperCase() || "Y"}</Text>
             </LinearGradient>
             <View style={styles.avatarGlow} />
           </Animated.View>
 
           <Text style={styles.welcomeText}>Bienvenue,</Text>
-          <Text style={styles.userName}>{user?.name || "Utilisateur"}</Text>
+          <Text style={styles.userName}>{user?.name || "Youla Mamadouba"}</Text>
 
           <View style={styles.userTypeIndicator}>
             <Ionicons name={userType === "hearing" ? "ear" : "hand-left"} size={16} color="#146454" />
