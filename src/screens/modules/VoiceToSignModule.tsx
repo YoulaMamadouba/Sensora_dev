@@ -188,11 +188,14 @@ const VoiceToSignModule: React.FC = () => {
       console.log('✅ Enregistrement démarré')
     } catch (err) {
       console.error('❌ Erreur lors du démarrage de l\'enregistrement:', err)
-      Alert.alert(
-        'Erreur d\'enregistrement',
-        'Impossible de démarrer l\'enregistrement. Vérifiez que l\'application a accès au microphone dans les paramètres.',
-        [{ text: 'OK' }]
-      )
+      // Ne pas afficher l'erreur sur mobile
+      if (Platform.OS === 'web') {
+        Alert.alert(
+          'Erreur d\'enregistrement',
+          'Impossible de démarrer l\'enregistrement. Vérifiez que l\'application a accès au microphone dans les paramètres.',
+          [{ text: 'OK' }]
+        )
+      }
     }
   }
 
@@ -334,7 +337,10 @@ const VoiceToSignModule: React.FC = () => {
             }
           }
           
-          showOpenAINotification(`Upload échoué: ${errorMessage}`)
+          // Ne pas afficher la notification d'erreur d'upload sur mobile
+          if (Platform.OS === 'web') {
+            showOpenAINotification(`Upload échoué: ${errorMessage}`)
+          }
           
           // Mettre à jour les statistiques d'upload
           setUploadStats(prev => ({
@@ -365,7 +371,10 @@ const VoiceToSignModule: React.FC = () => {
       }
     } catch (err) {
       console.error('❌ Erreur lors de l\'arrêt de l\'enregistrement:', err)
-      Alert.alert('Erreur', 'Impossible d\'arrêter l\'enregistrement')
+      // Ne pas afficher l'erreur sur mobile
+      if (Platform.OS === 'web') {
+        Alert.alert('Erreur', 'Impossible d\'arrêter l\'enregistrement')
+      }
     } finally {
       setIsProcessing(false)
       setIsTranscribing(false)
@@ -405,7 +414,10 @@ const VoiceToSignModule: React.FC = () => {
       }
     } catch (error) {
       console.error('❌ Erreur lors de l\'upload:', error)
-      Alert.alert('Erreur', 'Impossible d\'uploader le fichier audio')
+      // Ne pas afficher l'erreur sur mobile
+      if (Platform.OS === 'web') {
+        Alert.alert('Erreur', 'Impossible d\'uploader le fichier audio')
+      }
       return null
     }
   }

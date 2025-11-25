@@ -5,6 +5,8 @@ import { Renderer } from 'expo-three';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { Video, ResizeMode } from 'expo-av';
+import { Asset } from 'expo-asset';
 
 const { width } = Dimensions.get('window');
 
@@ -21,9 +23,11 @@ const SignLanguageAvatar: React.FC<SignLanguageAvatarProps> = ({
   currentSign = "",
   style 
 }) => {
-  const [isWeb, setIsWeb] = useState(false);
+  // Détection plateforme directe avec Platform.OS (plus fiable)
+  const isWeb = Platform.OS === 'web';
   const [model, setModel] = useState<THREE.Group | null>(null);
   const [glbLoaded, setGlbLoaded] = useState(false);
+  const [videoUri, setVideoUri] = useState<string | null>(null);
   
   // Refs for FBX animation
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
@@ -32,25 +36,39 @@ const SignLanguageAvatar: React.FC<SignLanguageAvatarProps> = ({
   // Debug: Log des props
   useEffect(() => {
     console.log('🎬 SignLanguageAvatar Props:', { isSigning, signText, currentSign });
-  }, [isSigning, signText, currentSign]);
+    console.log('🔍 Détection plateforme:', isWeb ? 'WEB' : 'MOBILE', `(Platform.OS: ${Platform.OS})`);
+  }, [isSigning, signText, currentSign, isWeb]);
 
+  // Charger la vidéo pour mobile
   useEffect(() => {
-    // Détecteur si on est sur le web
-    const detectPlatform = () => {
-      try {
-         const hasWindow = typeof globalThis !== 'undefined' && (globalThis as any).window;
-         const isWebPlatform = hasWindow && !(globalThis as any).window.ReactNativeWebView;
-        
-        console.log('🔍 Détection plateforme:', isWebPlatform ? 'WEB' : 'MOBILE');
-        setIsWeb(isWebPlatform);
-      } catch (error) {
-        console.log('Platform detection error, assuming web');
-        setIsWeb(true);
-      }
-    };
-    
-    detectPlatform();
-  }, []);
+    if (!isWeb) {
+      const loadVideo = async () => {
+        try {
+          // Utiliser Asset.fromModule pour charger la vidéo
+          const videoModule = require('../../assets/ava2.MOV');
+          const videoAsset = Asset.fromModule(videoModule);
+          await videoAsset.downloadAsync();
+          const uri = videoAsset.localUri || videoAsset.uri;
+          setVideoUri(uri);
+          console.log('✅ Vidéo chargée:', uri);
+        } catch (error: any) {
+          console.error('❌ Erreur chargement vidéo:', error);
+          // Fallback: essayer require direct
+          try {
+            const videoModule = require('../../assets/ava2.MOV');
+            const uri = typeof videoModule === 'string' 
+              ? videoModule 
+              : (videoModule as any).default || videoModule;
+            setVideoUri(uri);
+            console.log('✅ Vidéo chargée (fallback):', uri);
+          } catch (fallbackError) {
+            console.error('❌ Toutes les méthodes de chargement ont échoué:', fallbackError);
+          }
+        }
+      };
+      loadVideo();
+    }
+  }, [isWeb]);
 
   const onContextCreate = async (gl: any) => {
     console.log('🎨 onContextCreate called - Setting up Three.js scene');
@@ -232,9 +250,32 @@ const SignLanguageAvatar: React.FC<SignLanguageAvatarProps> = ({
     animate();
   };
 
-  // Si pas sur web ou pas de signText, ne rien afficher
-  if (!isWeb || !signText || !signText.trim()) {
-    console.log('⏭️ Avatar caché - signText vide ou pas web');
+  // Si pas sur web, afficher la vidéo sur mobile
+  if (!isWeb) {
+    console.log('📱 Rendu MOBILE - Affichage vidéo ava2.MOV');
+    
+    if (!videoUri) {
+      return null; // Ne rien afficher pendant le chargement
+    }
+    
+    return (
+      <View style={[styles.videoWrapper, style]}>
+        <Video
+          source={{ uri: videoUri }}
+          style={styles.video}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay
+          isLooping
+          isMuted={false}
+          useNativeControls={false}
+        />
+      </View>
+    );
+  }
+
+  // Si pas de signText sur web, ne rien afficher
+  if (!signText || !signText.trim()) {
+    console.log('⏭️ Avatar caché - signText vide');
     return <View style={[styles.container, style]} />;
   }
 
@@ -260,6 +301,7 @@ const styles = StyleSheet.create({
     height: 240,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   glView: {
     flex: 1,
@@ -294,6 +336,32 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'white',
     zIndex: 1,
+  },
+  videoWrapper: {
+    width: 240,
+    height: 140,
+    backgroundColor: 'transparent',
+    alignSelf: 'center',
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 0,
+    marginVertical: 0,
+    padding: 0,
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
+  },
+  loadingContainer: {
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#146454',
+    fontSize: 14,
   },
 });
 
