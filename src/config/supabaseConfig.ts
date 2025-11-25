@@ -1,12 +1,16 @@
 /**
  * Configuration Supabase pour l'application Sensora
+ * Utilise Constants.expoConfig?.extra (injecté par EAS) avec fallback sur process.env
  */
 
+import Constants from 'expo-constants';
 import SupabaseService from '../services/SupabaseService'
 
-// Récupération des variables d'environnement
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+// Récupération des variables d'environnement - Priorité: extra > process.env
+const SUPABASE_URL = Constants.expoConfig?.extra?.supabaseUrl || 
+                     process.env.EXPO_PUBLIC_SUPABASE_URL
+const SUPABASE_ANON_KEY = Constants.expoConfig?.extra?.supabaseAnonKey || 
+                          process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
 
 /**
  * Vérifier si Supabase est configuré

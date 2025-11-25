@@ -3,3 +3,5 @@ node_modules
 .expo-shared
 *.log
 .env
+# Fichier EAS - les variables sensibles doivent être configurées via Dashboard EAS
+# eas.json

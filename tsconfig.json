@@ -13,11 +13,12 @@
     "lib": [
       "esnext"
     ],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "target": "esnext"
+    "target": "esnext",
+    "customConditions": []
   },
   "include": [
     "**/*.ts",
