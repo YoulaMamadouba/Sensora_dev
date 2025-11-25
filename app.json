@@ -2,6 +2,7 @@
   "expo": {
     "name": "Sensora",
     "slug": "sensora-app",
+    "owner": "youla_mamadouba",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,13 +12,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#182825"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sensora.app",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Cette application a besoin d'accéder à votre microphone pour enregistrer votre voix et la traduire en langue des signes.",
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -34,6 +39,13 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-av"]
+    "plugins": [
+      "expo-av"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "14b742e5-9073-4378-a4a7-65f5977da601"
+      }
+    }
   }
 }
