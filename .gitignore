@@ -3,3 +3,5 @@ node_modules
 .expo-shared
 *.log
 .env
+# Fichier EAS avec variables sensibles (optionnel - décommentez si vous ne voulez pas commiter eas.json)
+# eas.json
