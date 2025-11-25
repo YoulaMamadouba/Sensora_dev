@@ -43,7 +43,17 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     web: {
       favicon: "./assets/favicon.png"
     },
-    plugins: ["expo-av"],
+    plugins: [
+      "expo-av",
+      [
+        "expo-build-properties",
+        {
+          android: {
+            kotlinVersion: "2.0.0",
+          },
+        },
+      ],
+    ],
     extra: {
       supabaseUrl,
       supabaseAnonKey,
