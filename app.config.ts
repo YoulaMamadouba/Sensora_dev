@@ -54,7 +54,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       "./plugins/withFixBundleCompression",
-      "./plugins/withFixReanimatedVersion",
     ],
     extra: {
       supabaseUrl,
