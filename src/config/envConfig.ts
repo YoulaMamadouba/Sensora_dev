@@ -1,14 +1,20 @@
 /**
  * Configuration des variables d'environnement
+ * Utilise Constants.expoConfig?.extra (injecté par EAS) avec fallback sur process.env
  */
 
+import Constants from 'expo-constants';
+
 export const ENV_CONFIG = {
-  // Supabase
-  SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL || '',
-  SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '',
+  // Supabase - Priorité: extra > process.env
+  SUPABASE_URL: Constants.expoConfig?.extra?.supabaseUrl || 
+                process.env.EXPO_PUBLIC_SUPABASE_URL || '',
+  SUPABASE_ANON_KEY: Constants.expoConfig?.extra?.supabaseAnonKey || 
+                     process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '',
   
-  // OpenAI
-  OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
+  // OpenAI - Priorité: extra > process.env
+  OPENAI_API_KEY: Constants.expoConfig?.extra?.openAIApiKey || 
+                  process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
   
   // Configuration de l'application
   APP_ENV: process.env.NODE_ENV || 'development',
