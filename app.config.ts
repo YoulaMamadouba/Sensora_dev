@@ -53,6 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           },
         },
       ],
+      "./plugins/withFixBundleCompression",
     ],
     extra: {
       supabaseUrl,
