@@ -1,11 +1,15 @@
 diff --git a/node_modules/react-native-3d-model-view/android/src/main/java/se/bonniernews/rn3d/RN3DViewManager.java b/node_modules/react-native-3d-model-view/android/src/main/java/se/bonniernews/rn3d/RN3DViewManager.java
-index 4ce69c6..81f3ccf 100644
+index 2e85188..bd1c96d 100644
 --- a/node_modules/react-native-3d-model-view/android/src/main/java/se/bonniernews/rn3d/RN3DViewManager.java
 +++ b/node_modules/react-native-3d-model-view/android/src/main/java/se/bonniernews/rn3d/RN3DViewManager.java
-@@
+@@ -5,8 +5,8 @@
+ package se.bonniernews.rn3d;
+ 
+ import android.content.Context;
 -import android.support.annotation.Nullable;
 -import android.support.annotation.NonNull;
 +import androidx.annotation.Nullable;
 +import androidx.annotation.NonNull;
-
-
+ import android.view.ViewGroup;
+ 
+ import com.facebook.infer.annotation.Assertions;
