@@ -1,0 +1,11 @@
+diff --git a/node_modules/react-native-3d-model-view/android/src/main/java/se/bonniernews/rn3d/RN3DViewManager.java b/node_modules/react-native-3d-model-view/android/src/main/java/se/bonniernews/rn3d/RN3DViewManager.java
+index 4ce69c6..81f3ccf 100644
+--- a/node_modules/react-native-3d-model-view/android/src/main/java/se/bonniernews/rn3d/RN3DViewManager.java
++++ b/node_modules/react-native-3d-model-view/android/src/main/java/se/bonniernews/rn3d/RN3DViewManager.java
+@@
+-import android.support.annotation.Nullable;
+-import android.support.annotation.NonNull;
++import androidx.annotation.Nullable;
++import androidx.annotation.NonNull;
+
+

@@ -1,0 +1,13 @@
+diff --git a/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/decorators/CSSProps.kt b/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/decorators/CSSProps.kt
+index 3e6f6b0..6c15911 100644
+--- a/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/decorators/CSSProps.kt
++++ b/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/decorators/CSSProps.kt
+@@
+-    for (i in 0..<shadows.size()) {
+-      val shadow = BoxShadow.parse(shadows.getMap(i), view.context) ?: continue
++    for (i in 0..<shadows.size()) {
++      val shadow = BoxShadow.parse(shadows.getMap(i)) ?: continue
+       shadowStyle.add((shadow))
+     }
+
+
