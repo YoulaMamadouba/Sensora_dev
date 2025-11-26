@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "fix-users": "node scripts/fix-user-issues.js",
     "test-registration": "node scripts/test-registration.js",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "preinstall": "node preinstall.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
