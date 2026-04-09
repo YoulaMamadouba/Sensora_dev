@@ -59,7 +59,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         userProfileFullName: userProfile?.full_name,
         userMetadataFullName: supabaseUser.user_metadata?.full_name,
         userMetadataName: supabaseUser.user_metadata?.name,
-        finalMappedName: mappedUser.name,
         userMetadataGivenName: supabaseUser.user_metadata?.given_name,
         finalMappedName: mappedUser.name
       })
@@ -76,41 +75,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string, type: "hearing" | "deaf"): Promise<boolean> => {
     try {
-      // Essayer d'abord avec Supabase si configuré
-      if (supabaseConfigured && supabaseService) {
-        console.log('🔐 Tentative de connexion avec Supabase...')
-        const result = await supabaseService.signIn(email, password)
-        
-        if (result?.user) {
-          // Vérifier et corriger le type d'utilisateur si nécessaire
-          const expectedRole: 'entendant' | 'sourd' = type === 'deaf' ? 'sourd' : 'entendant'
-          await supabaseService.checkAndFixUserRole(result.user.id, expectedRole)
-        }
-        
-        // L'état sera mis à jour automatiquement via useEffect
-        return true
-      } else {
-        // Fallback vers l'authentification simulée
-        console.log('🔐 Connexion simulée (Supabase non configuré)')
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        
-        if (email && password) {
-          const mockUser: User = {
-            id: "1",
-            email,
-            name: email.split("@")[0],
-            userType: type,
-          }
-          setUser(mockUser)
-          setUserType(type)
-          return true
-        }
+      // Simulation forcée pour passer direct
+      console.log('🔐 Connexion simulée (Forcée)')
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      
+      const mockUser: User = {
+        id: "1",
+        email: email || "test@example.com",
+        name: email ? email.split("@")[0] : "Testeur",
+        userType: type,
       }
+      setUser(mockUser)
+      setUserType(type)
+      
+      try {
+        await AsyncStorage.setItem('user', JSON.stringify(mockUser))
+        await AsyncStorage.setItem('userType', type)
+        await AsyncStorage.setItem('isAuthenticated', 'true')
+      } catch (e) {
+        console.log('Erreur AsyncStorage', e)
+      }
+
+      return true
     } catch (error) {
-      console.error('❌ Erreur de connexion:', error)
+      console.error('❌ Erreur de connexion simulée:', error)
       return false
     }
-    return false
   }
 
   // Fonction pour gérer la navigation après l'inscription
@@ -124,137 +114,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     onSuccess?: () => void
   ): Promise<boolean> => {
     try {
-      // Essayer d'abord avec Supabase si configuré
-      if (supabaseConfigured && supabaseService) {
-        console.log('📝 Tentative d\'inscription avec Supabase...')
-        
-        // Convertir le type vers le format Supabase
-        const userRole: 'entendant' | 'sourd' = type === 'deaf' ? 'sourd' : 'entendant'
-        
-        // S'assurer que le type d'utilisateur est bien défini
-        if (!type) {
-          console.warn('⚠️ Type d\'utilisateur non défini, utilisation de la valeur par défaut: entendant')
-          type = 'hearing'
-        }
-        
-        console.log(`📝 Inscription de l'utilisateur avec le rôle: ${userRole}`)
-        
-        const result = await supabaseService.signUp(email, password, name, userRole)
-        
-        if (result?.user) {
-          console.log('✅ Utilisateur inscrit avec succès, mise à jour du contexte local')
-          
-          // Attendre un peu pour que la session soit bien établie
-          await new Promise(resolve => setTimeout(resolve, 500))
-          
-          // Vérifier que l'utilisateur a bien une session active
-          const currentSession = await supabaseService.getCurrentSession()
-          if (!currentSession) {
-            console.warn('⚠️ Aucune session active après inscription, tentative de connexion...')
-            // Essayer de se connecter automatiquement
-            try {
-              const signInResult = await supabaseService.signIn(email, password)
-              if (signInResult?.user) {
-                console.log('✅ Connexion automatique réussie après inscription')
-              }
-            } catch (signInError) {
-              console.error('❌ Échec de la connexion automatique:', signInError)
-            }
-          }
-          
-          // Diagnostiquer le rôle utilisateur
-          const diagnosis = await supabaseService.diagnoseUserRole(result.user.id)
-          if (!diagnosis.success) {
-            console.warn('⚠️ Problèmes détectés avec le rôle utilisateur:', diagnosis.issues)
-            
-            // Tenter de corriger les problèmes
-            const roleCorrected = await supabaseService.checkAndFixUserRole(result.user.id, userRole)
-            if (!roleCorrected) {
-              console.warn('⚠️ Échec de la correction automatique du rôle, tentative de force mise à jour')
-              const forceUpdated = await supabaseService.forceUpdateUserRole(result.user.id, userRole)
-              if (!forceUpdated) {
-                console.error('❌ Impossible de corriger le rôle utilisateur')
-                // Continuer quand même, car l'utilisateur est inscrit
-              }
-            }
-          } else {
-            console.log('✅ Diagnostic du rôle utilisateur réussi')
-          }
-          
-          // Mettre à jour l'utilisateur dans le contexte
-          const mappedUser: User = {
-            id: result.user.id,
-            email: email,
-            name: name,
-            userType: type,
-          }
-          
-          // Mettre à jour l'état local
-          setUser(mappedUser)
-          setUserType(type)
-          
-          // S'assurer que le type d'utilisateur est correctement enregistré dans le stockage local
-          try {
-            await AsyncStorage.setItem('user', JSON.stringify(mappedUser))
-            await AsyncStorage.setItem('userType', type)
-            await AsyncStorage.setItem('isAuthenticated', 'true')
-            console.log('✅ Données utilisateur enregistrées dans le stockage local')
-          } catch (storageError) {
-            console.error('❌ Erreur lors de l\'enregistrement des données utilisateur:', storageError)
-          }
-          
-          return true
-        }
-        
-        // Si on arrive ici, l'inscription a peut-être réussi mais nécessite une confirmation par email
-        console.log('ℹ️ L\'inscription nécessite une confirmation par email')
-        Alert.alert(
-          "Vérifiez votre email",
-          "Un lien de confirmation a été envoyé à votre adresse email. Veuillez vérifier votre boîte de réception et cliquer sur le lien pour confirmer votre compte.",
-          [{ 
-            text: "OK"
-          }]
-        )
-        
-        // Retourner false pour indiquer que l'utilisateur doit confirmer son email
-        // et appeler le callback onSuccess si fourni
-        if (onSuccess) onSuccess()
-        return false
-      } else {
-        // Fallback vers l'authentification simulée
-        console.log('📝 Inscription simulée (Supabase non configuré)')
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        
-        if (email && password && name) {
-          const mockUser: User = {
-            id: "1",
-            email,
-            name,
-            userType: type,
-          }
-          setUser(mockUser)
-          setUserType(type)
-          return true
-        }
+      // Simulation forcée pour passer direct
+      console.log('📝 Inscription simulée (Forcée)')
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      
+      const mockUser: User = {
+        id: "1",
+        email: email || "test@example.com",
+        name: name || "Testeur",
+        userType: type,
       }
+      setUser(mockUser)
+      setUserType(type)
+      
+      try {
+        await AsyncStorage.setItem('user', JSON.stringify(mockUser))
+        await AsyncStorage.setItem('userType', type)
+        await AsyncStorage.setItem('isAuthenticated', 'true')
+      } catch (e) {
+        console.log('Erreur AsyncStorage', e)
+      }
+      
+      if (onSuccess) onSuccess()
+      return true
     } catch (error: any) {
-      console.error('❌ Erreur d\'inscription:', error)
-      
-      // Afficher un message d'erreur plus convivial
-      let errorMessage = "Une erreur est survenue lors de l'inscription"
-      
-      if (error.message.includes('already registered')) {
-        errorMessage = "Cette adresse email est déjà utilisée. Essayez de vous connecter."
-      } else if (error.message.includes('email')) {
-        errorMessage = "Veuillez entrer une adresse email valide"
-      } else if (error.message.includes('password')) {
-        errorMessage = "Le mot de passe doit contenir au moins 6 caractères"
-      }
-      
-      Alert.alert("Erreur d'inscription", errorMessage)
+      console.error('❌ Erreur d\'inscription simulée:', error)
+      Alert.alert("Erreur d'inscription", "Une erreur est survenue lors de l'inscription")
       return false
     }
-    return false
   }
 
   const logout = () => {
